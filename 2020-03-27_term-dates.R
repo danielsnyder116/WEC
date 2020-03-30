@@ -40,3 +40,5 @@ df <- df %>% mutate(year=year(start_date))
 
 df <- df %>% select(semester, year, start_date, start_day, end_date, end_day)
 
+write.csv(df, "2000-2020_semester-start-end-dates.csv", row.names=FALSE)
+
