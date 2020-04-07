@@ -43,9 +43,16 @@ nrow(distinct(df_student))
 #Getting rid of the couple of duplicate rows
 df_student <- distinct(df_student)
 
-write.csv(df_student, "2000-2019_student-demographics-and-assessment-data.csv", row.names=FALSE)
+#write.csv(df_student, "2000-2019_student-demographics-and-assessment-data.csv", row.names=FALSE)
 
+## GETTING RID OF DUPLICATES IN FINANCE DATA
 
+nrow(df_finance)
+nrow(distinct(df_finance))
+
+df_finance <- distinct(df_finance)
+
+write.csv(df_finance,"2000-2020-01-15_financial-data.csv" )
 
 
 
