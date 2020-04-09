@@ -10,24 +10,6 @@ setwd("/Users/Daniel/Documents/wec")
 
 df <- read.csv("country_class.csv", stringsAsFactors = FALSE, header=1, encoding="UTF-8")
 
-##ATTEMPT 1 without tidyr, needs more TIDYR! 
-
-# n <- names(df)
-# ready <- list()
-# for (i in 1:length(df)) {
-# 
-# ready[i] <- df %>% separate(., col=n[i], into=c(glue("student_id_{n}")[i], glue("last_name_{n}")[i], 
-#glue("first_name_{n}")[i], glue("country1_{n}")[i], 
-#glue("country2_{n}")[i]),
-# 
-# extra='merge', sep=, remove=TRUE, convert=TRUE, fill="right") %>% 
-# select(., c(i:(i+4))) %>% list(.)
-# }
-# newest <- bind_cols(list.cbind(ready))
-# #converts all columns to character type without having to then convert list to data frame - thanks Hadley!
-# df[] <- lapply(newest, as.character)
-
-
 names(df)[1] <- "Fall.2000"
 names(df)[42] <- "Spring.2019"
 names(df)
@@ -296,6 +278,26 @@ glimpse(df_base)
 
 
 df <- read.csv('improved_demog_01_26.csv', stringsAsFactors = FALSE)
+
+
+
+
+##ATTEMPT 1 without tidyr, needs more TIDYR! 
+
+# n <- names(df)
+# ready <- list()
+# for (i in 1:length(df)) {
+# 
+# ready[i] <- df %>% separate(., col=n[i], into=c(glue("student_id_{n}")[i], glue("last_name_{n}")[i], 
+#glue("first_name_{n}")[i], glue("country1_{n}")[i], 
+#glue("country2_{n}")[i]),
+# 
+# extra='merge', sep=, remove=TRUE, convert=TRUE, fill="right") %>% 
+# select(., c(i:(i+4))) %>% list(.)
+# }
+# newest <- bind_cols(list.cbind(ready))
+# #converts all columns to character type without having to then convert list to data frame - thanks Hadley!
+# df[] <- lapply(newest, as.character)
 
 #Function 1  - determine if good country is in df$country - returns TRUE
 # has_country <- function(good_vec, frame_column) {
