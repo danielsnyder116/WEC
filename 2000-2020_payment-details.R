@@ -1,69 +1,170 @@
-library(dplyr)
-library(stringr)
 library(rJava)
 library(tabulizer)
+library(dplyr)
+library(stringr)
 library(tibble)
 library(tidyr)
 library(lubridate)
 
 setwd("C:/Users/602770/Downloads/volunteer/wec/Payment Methods")
 
-file <- list.files()[1]
+file <- list.files()
 
 #Gets all the text as one long string - best option
-pdf_text <- extract_text(file, encoding="latin1")
+pdf_text <- extract_text(file, encoding="UTF-8")
 
 #Splitting on Totals to separate data for each payment method
 pdf_text <- as.data.frame(str_split(pdf_text, pattern='Total:'), stringsAsFactors = FALSE)
 
-
-##### Getting strings in a clean format #####
-#Issue with setting first split string as header so for now, saving as new row and appending back on 
-extra_row <- as.data.frame(colnames(pdf_text), stringsAsFactors = FALSE)
-
-colnames(extra_row) <- "V1"
-colnames(pdf_text) <- "V1"
-
-pdf_text <- bind_rows(pdf_text, extra_row)
 colnames(pdf_text) <- 'data'
-
 
 #Slicing the dataframe to isolate each payment type string
 nrow(pdf_text)
 
-one <- slice(pdf_text, 1)
-two <- slice(pdf_text, 2)
+one <-   slice(pdf_text, 1)
+two <-   slice(pdf_text, 2)
 three <- slice(pdf_text, 3)
-four <- slice(pdf_text, 4)
+four <-  slice(pdf_text, 4)
+five <-  slice(pdf_text, 5)
+six <-   slice(pdf_text, 6)
+seven <- slice(pdf_text, 7)
+eight <- slice(pdf_text, 8)
+nine <-  slice(pdf_text, 9)
+ten <-   slice(pdf_text, 10)
+eleven <- slice(pdf_text, 11)
+twelve <- slice(pdf_text, 12)
 
 
-#dataframes <- list(one, two, three, four)
-# for (frame in dataframes) {
-#
-#}
+#Wanted to do this so it would loop through a list of dataframes and
+# take care of this all at once but getting stuck and not worth trying 
+# to figure it out at the moment. Blargh but carry on we shall.
 
-###### THIS WILL EVENTUALLY BE WITHIN A FOR LOOP ###### 
-###### TO TAKE CARE OF EACH PAYMENT TYPE STRING  ###### 
-###### AND THEN MERGE BACK TOGETHER AT THE END   ###### 
+cleaner <- function(frame) {
+    #frame <- five
+  
+    #Isolating relevant information regarding assessments
+    frame <- as.data.frame(str_split(frame, pattern="\r\n"))
+    
+    colnames(frame) <- "data"
+    
+    #Getting rid of columns with student id and names (student id is at least 5 digits thus the pattern)
+    frame <- frame %>% filter(str_detect(data, pattern="\\d\\d\\d\\d\\d"))
+    
+    #Geting year column separately using regex/str_detect
+    frame <- frame %>% mutate(date=str_extract(data, pattern="\\d\\d\\/\\d\\d\\/\\d\\d\\d\\d"))
+  
+    #Also being mindful of cases with students who have two last names not connected by a hypen
+    #Thankfully, we have dates to use in merge along with student id so works out well
+    #Split the student id, last name, and first name up into new columns by " ", and get rid of everything else
+    frame <- frame %>% separate(data, c("student_id", "last_name", "first_name", "extra"), sep = " ", extra="drop")
+  
+    #Simplify year column - convert year to lubridate form using mdy to match format
+    # keeping it as full date to avoid issues with duplicates
+    frame <- frame %>% mutate(date= mdy(date), pmt_method="")
+    
+return (frame)
+
+}
+
+one <- cleaner(one)
+two <- cleaner(two)
+three <- cleaner(three)
+four <- cleaner(four)
+five <- cleaner(five)
+six <- cleaner(six)
+seven <- cleaner(seven)
+eight <- cleaner(eight)
+nine <- cleaner(nine)
+ten <- cleaner(ten)
+eleven <- cleaner(eleven)
+twelve <- cleaner(twelve)
+
+#Adding in appropriate payment method and name
+df_missing      <- one %>% mutate(pmt_method=NA)
+df_amer_express <- two %>% mutate(pmt_method="American Express")
+df_cash         <- three %>% mutate(pmt_method="Cash")
+df_check        <- four %>% mutate(pmt_method="Check")
+df_credit       <- five %>% mutate(pmt_method="Credit Card")
+df_debit        <- six %>% mutate(pmt_method="Debit Card")
+df_mastercard   <- seven %>% mutate(pmt_method="Credit Card")
+df_other        <- eight %>% mutate(pmt_method=NA)
+df_scholarship  <- nine %>% mutate(pmt_method="Scholarship")
+df_third_party  <- ten %>% mutate(pmt_method="Third Party")
+df_visa         <- eleven %>% mutate(pmt_method="Credit Card")
+df_waiver       <- twelve %>% mutate(pmt_method="Waiver")
 
 
-#Isolating relevant information regarding assessments
-one <- as.data.frame(str_split(one, pattern="\r\n"))
+#Setting it up to bind each dataframe together
+df_final <- df_missing
 
-colnames(one) <- "data"
+dataframes <- list(df_amer_express, df_cash, df_check,
+                   df_credit, df_debit,df_mastercard,
+                   df_other,df_scholarship, df_third_party,
+                   df_visa, df_waiver)
 
-#Getting rid of columns with student id and names (student id is at least 5 digits thus the pattern)
-one <- one %>% filter(str_detect(data, pattern="\\d\\d\\d\\d\\d"))
+#Concatenating dataframes together
+for (dataframe in dataframes) {
+  df_final <- bind_rows(df_final, dataframe)
+}
 
-#Geting year column separately using regex/str_detect
-one <- one %>% mutate(year=str_extract(data, pattern="\\d\\d\\/\\d\\d\\/\\d\\d\\d\\d"))
+#Distribution for each payment method
+count(df_final, vars=pmt_method) 
 
-#Split the student id, last name, and first name up into new columns by " ", and get rid of everything else
-one <- one %>% separate(data, c("student_id", "last_name", "first_name"), sep = " ", extra="drop")
+#Adding date information in to aid in merge with financial payments dataframe
+df_final <- df_final %>% mutate(year=year(df_final$date),
+                                month=month(df_final$date, label=TRUE),
+                                day=wday(df_final$date, label=TRUE))
+
+df_final <- df_final %>% select(student_id,last_name,first_name,
+                                pmt_method, year, month, day)
+
+#write.csv(df_final, "../Database/2000-2020_payment-methods.csv", row.names=FALSE)
 
 
-#Simplify year column - convert year to lubridate form using mdy to match format
-# and then use the year method to select the year part, and then put that under the 'year' column
-one <- one %>% mutate(year= year(mdy(year)))
+#Bringing in previous financial information to create more complete data set
+df_finance <- read.csv("../Database/2000-2020-01-15_financial-data.csv", stringsAsFactors = FALSE,
+                       encoding = 'UTF-8')
+
+#Ensuring no extra spaces (missed this earlier, whoops!)
+df_finance <- df_finance %>% mutate(first_name=str_squish(first_name))
+
+#Ensuring data types match
+df_final <- df_final %>% mutate(year=as.integer(year),month=as.character(month), day=as.character(day))
+df_finance <- df_finance %>% mutate(student_id = as.character(student_id))
+
+#Confirming matching data types
+glimpse(df_finance)
+glimpse(df_final)
+
+
+#Not using names as there are issues with double last names when cleaning up the long string
+df_combined <- full_join(df_finance, df_final, by=c("student_id","year", "month", "day"))
+
+#Getting rid of .y names since they had more issues
+df_combined <- df_combined %>% select(-c(last_name.y, first_name.y))
+
+#Renaming columns YAY this is so easy with tidyverse
+df_combined <- df_combined %>% rename(last_name = last_name.x,
+                                      first_name = first_name.x)
+
+
+#Get rid of duplicates
+df_combined <- distinct(df_combined)
+
+#Drop rows where no name (most of these didn't match because the transactions were
+#from after January 15th when I pulled the original financial data)
+df_combined <- df_combined %>% filter(!is.na(last_name))
+
+
+nrow(df_combined)
+
+1272 / 54508
+
+count(df_combined, vars=pmt_method)
+
+
+#write.csv(df_combined, "../Database/2000-2020_COMPLETE_financial-data_with-payment-method.csv", row.names=FALSE)
+
+
 
 
