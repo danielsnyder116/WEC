@@ -87,7 +87,7 @@ df_check        <- four %>% mutate(pmt_method="Check")
 df_credit       <- five %>% mutate(pmt_method="Credit Card")
 df_debit        <- six %>% mutate(pmt_method="Debit Card")
 df_mastercard   <- seven %>% mutate(pmt_method="Credit Card")
-df_other        <- eight %>% mutate(pmt_method=NA)
+df_other        <- eight %>% mutate(pmt_method="Other")
 df_scholarship  <- nine %>% mutate(pmt_method="Scholarship")
 df_third_party  <- ten %>% mutate(pmt_method="Third Party")
 df_visa         <- eleven %>% mutate(pmt_method="Credit Card")
@@ -118,11 +118,11 @@ df_final <- df_final %>% mutate(year=year(df_final$date),
 df_final <- df_final %>% select(student_id,last_name,first_name,
                                 pmt_method, year, month, day)
 
-#write.csv(df_final, "../Database/2000-2020_payment-methods.csv", row.names=FALSE)
+write.csv(df_final, "../Database/2000-2020_payment-methods.csv", row.names=FALSE)
 
 
 #Bringing in previous financial information to create more complete data set
-df_finance <- read.csv("../Database/2000-2020-01-15_financial-data.csv", stringsAsFactors = FALSE,
+df_finance <- read.csv("../Database/Archive/2000-2020-01-15_financial-data.csv", stringsAsFactors = FALSE,
                        encoding = 'UTF-8')
 
 #Ensuring no extra spaces (missed this earlier, whoops!)
@@ -158,12 +158,12 @@ df_combined <- df_combined %>% filter(!is.na(last_name))
 
 nrow(df_combined)
 
-1272 / 54508
+534 / 54508
 
 count(df_combined, vars=pmt_method)
 
 
-#write.csv(df_combined, "../Database/2000-2020_COMPLETE_financial-data_with-payment-method.csv", row.names=FALSE)
+write.csv(df_combined, "../Database/2000-2020_COMPLETE_financial-data_with-payment-method.csv", row.names=FALSE)
 
 
 
