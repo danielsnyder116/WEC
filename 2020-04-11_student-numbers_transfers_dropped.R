@@ -6,9 +6,7 @@ library(tidyr)
 
 setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Totals_Transfers_Dropped")
 
-
 files <- list.files()
-
 
 for (file in files) {
 
@@ -23,11 +21,10 @@ for (file in files) {
   
   #Creating Semester and Year Column - get first result from first row ([1]) and set that for all rows
   df <- pdf_text %>% mutate(semester=str_extract(data, pattern="Spring|Summer|Fall|Winter")[1],
-                                  year=str_extract(data, pattern="20\\d\\d")[1])
+                            year=str_extract(data, pattern="20\\d\\d")[1])
   
   #Get rid of first row and last row now that we have the information we need
   df <- df %>% slice(-1, -nrow(df))
-  
   
   #Sort data into columns
   df <- df %>% separate(data, c("A", "B"), sep=" ", fill="right", extra="merge")
@@ -38,7 +35,6 @@ for (file in files) {
   # to the class name to make everything right.
   
   for (i in 1:nrow(df)) {
-    
     
     if (length(unlist(str_split(df$B[i], pattern=" "))) >= 6) {
       
@@ -77,10 +73,10 @@ for (file in files) {
   df <- df %>% mutate(class_name = str_sub(A, start=3))
   df <- df %>% mutate(class_name = str_remove(class_name, "ekend"))
   
-  
   #Dropping messy columns
   df <- df %>% select(-B, -A)
   
+  #Rearranging columns
   df <- df %>% select(class_name, semester, year, total_active, dropped, transferred, total_total)
   
   
@@ -89,10 +85,9 @@ for (file in files) {
   }
   
   else {
-    
     df_final <- bind_rows(df_final, df)
   }
-
+  
 }
 
 nrow(df_final)
@@ -107,13 +102,13 @@ df_final <- arrange(df_final, desc(year))
 write.csv(df_final, "../../Database/2000-2019_student-numbers_includes-dropped-transferred.csv", row.names=FALSE)
 
 
-
+##### OLD YUCKY CODE - CODING IS A PROCESS, NEVER FORGET #BIRD BY BIRD #####
+#
 # df <- df %>% mutate(total_total=str_split(B, pattern=" ")[[4]])
 # 
 # df <- df %>% separate(A, c("Class 1", "Mess"), sep=" ",)
 # 
 # df <- df %>% mutate(class_2 = str_split(Mess, pattern=" ", n=3))
-# 
 # 
 # #Create class name column
 # for (i in 1:nrow(df)) {
