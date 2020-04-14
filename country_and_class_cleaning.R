@@ -123,12 +123,10 @@ df <- df %>% mutate(., country=replace(country, country=='Britto Gabarron', 'Bra
 df <- df %>% mutate(., country=replace(country, country=='Cabizuca', 'Brazil'))
 df <- df %>% mutate(., country=replace(country, country=='Camargo Claudia', 'Brazil'))
 
-
 df <- df %>% mutate(., country=replace(country, country=='Carla Macedo', 'Brazil'))
 df <- df %>% mutate(., country=replace(country, country=='Carvalho Braz', 'Brazil'))
 df <- df %>% mutate(., country=replace(country, country=='Carvalho Veiga', 'Brazil'))
 df <- df %>% mutate(., country=replace(country, country=='Central African Rep.', 'Central African Republic'))
-
 
 df <- df %>% mutate(., country=replace(country, country=='Cheikh', 'Mauritania'))
 df <- df %>% mutate(., country=replace(country, country=='Christina   Korea Republic Of', 'South Korea'))
@@ -227,7 +225,6 @@ df <- df %>% mutate(., country=replace(country, country=='Yoon   Korea Democrati
 df <- df %>% mutate(., country=replace(country, country=='Young   Korea Republic Of', 'South Korea'))
 df <- df %>% mutate(., country=replace(country, country=='Camargo Claudia', 'Brazil'))
 
-
 #Delete these rows as student_id is cell number
 strings <- c('Lanka','Republic','Salvador','Verde')
 df <- df %>% filter(., !country %in% strings)
@@ -242,19 +239,14 @@ df <- df %>% mutate(., country=replace(country, country %in% unknown, NA))
 #Making sure it worked 
 View(df %>% filter(., is.na(country)))
 
-
 #Final Check - let's see!
 View(count(df, vars=country))
-
 
 #Time to add it back into what we already have 
 #-------------------------------------------------------------
 
 #Pairing down dataframe and getting unique matches
 df_country <- df %>% select(student_id, country)  %>% unique(.)
-
-
-
 
 #16474 unique students 
 #14908 - ESL students
@@ -278,8 +270,6 @@ glimpse(df_base)
 
 
 df <- read.csv('improved_demog_01_26.csv', stringsAsFactors = FALSE)
-
-
 
 
 ##ATTEMPT 1 without tidyr, needs more TIDYR! 

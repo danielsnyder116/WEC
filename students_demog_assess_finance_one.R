@@ -13,9 +13,16 @@ df_assessment <- read.csv("2015-2019_student-assessments.csv", stringsAsFactors 
 #Due to the nature of the data, it is best to keep the finances separate as the merge
 #leads to a less useful conglomeration of data.
 
-#Also, finance data is already good to go. 
+## GETTING RID OF DUPLICATES IN FINANCE DATA
+nrow(df_finance)
+nrow(distinct(df_finance))
 
-################ PART 1: DEMOGRAPHIC/ASSESSMENT DATA ################ 
+df_finance <- distinct(df_finance)
+
+write.csv(df_finance,"2000-2020-01-15_financial-data.csv" )
+
+
+################ DEMOGRAPHIC/ASSESSMENT DATA ################ 
 glimpse(df_demographics)
 glimpse(df_assessment)
 
@@ -44,17 +51,6 @@ nrow(distinct(df_student))
 df_student <- distinct(df_student)
 
 #write.csv(df_student, "2000-2019_student-demographics-and-assessment-data.csv", row.names=FALSE)
-
-## GETTING RID OF DUPLICATES IN FINANCE DATA
-
-nrow(df_finance)
-nrow(distinct(df_finance))
-
-df_finance <- distinct(df_finance)
-
-write.csv(df_finance,"2000-2020-01-15_financial-data.csv" )
-
-
 
 
 

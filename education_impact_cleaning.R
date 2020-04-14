@@ -77,21 +77,7 @@ ggplot(df, aes(x=attendance, fill=year)) +
   geom_histogram(bins=5, binwidth = .5) +
   facet_grid(.~ semester) + theme_light() + facet_grid(.~year)
 
-
-
-
-
 count(df, vars=year)
-
-
-
-
-
-
-
-
-
-
 
 
 # # Failed attempt to write loop to parse numbers for all four columns
@@ -109,6 +95,3 @@ count(df, vars=year)
 # df$participation <- parse_number(df$participation)
 # df$language_score <- parse_number(df$language_score)
 # df$total_eval_score <- parse_number(df$total_eval_score)
-  
-  
-

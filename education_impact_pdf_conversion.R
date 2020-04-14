@@ -23,7 +23,8 @@ for (file in files) {
   colnames(pdf_text) <- 'data'
   
   #Isolating relevant information regarding assessments
-  pdf_text <- pdf_text %>% filter(str_detect(data, pattern="Semester:|Student's name|ID Number|Class Name|Final Exam|Attendance|Participation|Language|TOTAL"))
+  pdf_text <- pdf_text %>% filter(str_detect(data, 
+                          pattern="Semester:|Student's name|ID Number|Class Name|Final Exam|Attendance|Participation|Language|TOTAL"))
   
   #Filtering each column
   semester <- pdf_text         %>% filter(str_detect(data, pattern='Semester')) 
@@ -201,5 +202,3 @@ write.csv(df_all, "../Processed/2015-2019_intermediate_educational-performance-d
 #   
 #   df <- bind_rows(df, column)
 # }
-
-
