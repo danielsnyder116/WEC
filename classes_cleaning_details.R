@@ -5,10 +5,8 @@ library(ggplot2)
 
 setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Totals_Transfers_Dropped")
 
-df_numbers <- read.csv("Processed/2000-2019_student-numbers_includes-dropped-transferred.csv", stringsAsFactors = FALSE)
 df_details <- read.csv("Processed/2020-04-16_manual-class-info.csv", encoding='UTF-8', stringsAsFactors = FALSE)
 
-glimpse(df_numbers)
 glimpse(df_details)
 
 ########### PART 1: CLEANING UP DF_DETAILS ###########
@@ -92,6 +90,3 @@ nrow(df_details)
 # some could not be determined (mostly before 2009) 
 
 #So after everything, about 6% (182 / 3034) data where we don't know the days - overall better!
-
-
-
