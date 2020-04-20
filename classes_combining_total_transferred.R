@@ -136,17 +136,16 @@ df <- df %>% mutate(class_category = case_when(
                       str_detect(simple_standard_class, pattern = "[:digit:]|^INTRO") ~ "ESL Comprehensive",
                       str_detect(simple_standard_class, pattern = "COMP|INTERNET|MS|WINDOWS") ~ "Computer & Internet Literacy",
                       str_detect(simple_standard_class, pattern = "BOOK|LIT") ~ "English & Spanish Literacy",
-                      str_detect(simple_standard_class, pattern = "DC|HEALTHY|KITCHEN|MGMT") ~ "Personal Well-being"
-                      ))                                   
+                      str_detect(simple_standard_class, pattern = "DC|HEALTHY|KITCHEN|MGMT") ~ "Personal Well-being"))                                   
                    
-
-
 
 #It is finished...for now haha
 #write.csv(df, "Output/2000-2020_class-details_includes-dropped-transfers-totals.csv", row.names=FALSE)
 
+#Review dataframe for Claudia
+#df_missing <- df %>% filter(is.na(class_name) | is.na(DAYS) | DAYS=="?")
 
-
+#write.csv(df_missing, "Processed/missing-data-for-claudia.csv", row.names = FALSE)
 
 
 ############# OLD CODE GRAVEYARD - RIP IN PIECES #############
