@@ -117,6 +117,9 @@ df <- df %>% mutate(simple_standard_class = str_squish(str_replace_all(simple_st
 #Down to 116 unique class names from 504
 length(unique(df$simple_standard_class))
 
+#Bringing back in data after Claudia filled in info.
+df <- read.csv("Output/2000-2020_updated-class-details_includes-dropped-transfers-totals.csv", stringsAsFactors = FALSE)
+
 #Replacing class name that is unclear
 df <- df %>% mutate(simple_standard_class = str_replace(simple_standard_class, "PENDING-AGRICULTURE/FOOD", NA_character_))
 
@@ -125,7 +128,7 @@ df <- df %>% mutate(complete_standard_class = paste0(simple_standard_class, "_",
 
 
 #So now back up to 3,033 classes with 27 NA class names brought back in 
-df <- full_join(df, df_with_missing)
+#df <- full_join(df, df_with_missing)
 
 #Creating classication column to allow for grouping
 df <- df %>% mutate(class_category = case_when(  
@@ -139,6 +142,16 @@ df <- df %>% mutate(class_category = case_when(
                       str_detect(simple_standard_class, pattern = "DC|HEALTHY|KITCHEN|MGMT") ~ "Personal Well-being"))                                   
                    
 
+
+
+
+
+#FINAL SAVE
+write.csv(df, "Output/2000-2020_final-class-details_includes-dropped-transfers-totals.csv", row.names=FALSE)
+
+
+
+
 #It is finished...for now haha
 #write.csv(df, "Output/2000-2020_class-details_includes-dropped-transfers-totals.csv", row.names=FALSE)
 
@@ -146,6 +159,7 @@ df <- df %>% mutate(class_category = case_when(
 #df_missing <- df %>% filter(is.na(class_name) | is.na(DAYS) | DAYS=="?")
 
 #write.csv(df_missing, "Processed/missing-data-for-claudia.csv", row.names = FALSE)
+
 
 
 ############# OLD CODE GRAVEYARD - RIP IN PIECES #############
