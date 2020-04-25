@@ -118,7 +118,7 @@ df <- df %>% mutate(simple_standard_class = str_squish(str_replace_all(simple_st
 length(unique(df$simple_standard_class))
 
 #Bringing back in data after Claudia filled in info.
-df <- read.csv("Output/2000-2020_updated-class-details_includes-dropped-transfers-totals.csv", stringsAsFactors = FALSE)
+df <- read.csv("Processed/2000-2020_updated-class-details_includes-dropped-transfers-totals.csv", stringsAsFactors = FALSE)
 
 #Replacing class name that is unclear
 df <- df %>% mutate(simple_standard_class = str_replace(simple_standard_class, "PENDING-AGRICULTURE/FOOD", NA_character_))
@@ -136,7 +136,7 @@ df <- df %>% mutate(class_category = case_when(
                       str_detect(simple_standard_class, pattern = "WRITING") ~ "ESL Conversation & Writing",
                       str_detect(simple_standard_class, pattern = "ADV-WORKPLACE|ASSIST|BANK|CAREER|CONSTR|CUST|FOOD|GED|HOSP|RESTAURANT") ~ "Career Education",
                       str_detect(simple_standard_class, pattern = "CIVIC|CITIZEN") ~ "Civic Education",
-                      str_detect(simple_standard_class, pattern = "[:digit:]|^INTRO") ~ "ESL Comprehensive",
+                      str_detect(simple_standard_class, pattern = "[:digit:]|^INTRO|PRE-INTRO") ~ "ESL Comprehensive",
                       str_detect(simple_standard_class, pattern = "COMP|INTERNET|MS|WINDOWS") ~ "Computer & Internet Literacy",
                       str_detect(simple_standard_class, pattern = "BOOK|LIT") ~ "English & Spanish Literacy",
                       str_detect(simple_standard_class, pattern = "DC|HEALTHY|KITCHEN|MGMT") ~ "Personal Well-being"))                                   
