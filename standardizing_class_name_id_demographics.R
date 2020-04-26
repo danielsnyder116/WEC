@@ -29,11 +29,15 @@ df_demog <- df_demog %>% mutate(class_name = str_replace_all(class_name, pattern
 #Adding in str_pad to help differentiate
 df_demog <- df_demog %>% mutate(class_name = str_pad(class_name, width=30, side="right", pad=" "))
 #More fixes for CLASS NAME
-df_demog <- df_demog %>% mutate(class_name = case_when(str_detect(class_name, pattern="LITERACY-INTERMEDIA ") ~ "LITERACY INTERMEDIATE",
-                                                       str_detect(class_name, pattern="TAPES") ~ NA_character_,
+df_demog <- df_demog %>% mutate(class_name = case_when(str_detect(class_name, pattern="LITERACY-INTERMEDIA ") ~ "LITERACY-INTERMEDIATE",
+                                                       str_detect(class_name, pattern="TAPES|LATE-FEE|CALCULATOR") ~ NA_character_,
                                                        str_detect(class_name, pattern="MICROSOFT-POWER-POI ") ~ "MICROSOFT-POWER-POINT-2000",
-                                                       str_detect(class_name, pattern = "ESL-CONV-&-PRON-BEG ") ~ "ESL-CONV-&-PRON-BEGINNERS",
-                                                       str_detect(class_name, pattern = "COMPUTERS-101-ENGLI ") ~ "COMPUTERS-101",
+                                                       str_detect(class_name, pattern= "ESL-CONV-&-PRON-BEG ") ~ "ESL-CONV-&-PRON-BEGINNERS",
+                                                       str_detect(class_name, pattern= "COMPUTERS-101-ENGLI ") ~ "COMPUTERS-101",
+                                                       str_detect(class_name, pattern="ESLCONV-&-PRON-ADV") ~ "ESL-CONV-&-PRON-ADV",
+                                                       str_detect(class_name, pattern="COM ") ~ "COMPUTERS",
+                                                       str_detect(class_name, pattern="ESL-CONV-&-PRON-INT ") ~ "ESL-CONV-&-PRON-INTERMEDIATE",
+                                                       str_detect(class_name, pattern="ESL-CONV-&-PRON-ADV ") ~ "ESL-CONV-&-PRON-ADVANCED",
                                                        
                                                        
                                                        TRUE ~ class_name))
@@ -50,76 +54,6 @@ df_demog <- df_demog %>% mutate(semester =
 
 ########## TASK 2: ALTER CLASS NAMES IN DEMOGRAPHICS DATA TO MATCH CLASS NAMES ########## 
 ########## IN DF_CLASS SO THERE ARE MORE MATCHES AND MORE CLARITY              ########## 
-
-
-#This for loop iterates over the data that has merging issues from df_demog
-#and performs renaming tasks for class_name for each year (and by semester when needed)
-#This looks like there could be a better way to code it, but unfortunately since each year has
-#different issues, it has be done one year at at time yippeeeeeee
-
-years <- seq(2000, 2019)
-
-for (year in years) {
-  
-  
-  if (year == 2001 & semester== "SUMMER") {
-    df_demog <- df_demog %>% mutate(class_name = 
-                                      case_when(str_detect(class_name, pattern="ESLCONV-&-PRON-ADV") ~ "ESL-CONV-&-PRON-ADV",
-                                                str_detect(class_name, pattern="COM") ~ "COMPUTERS",
-                                                str_detect(class_name, pattern="LITERACY-INTERMEDIA") ~ "LITERACY INTERMEDIATE",
-                                                TRUE ~ class_name))
-  }
-  
-  else if (year == 2003 & semester == "SUMMER") {
-    df_demog <- df_demog %>% mutate(class_name = 
-                                      case_when(str_detect(class_name, pattern="ESL-CONV-&-PRON-INT ") ~ "ESL-CONV-&-PRON-INTERMEDIATE",
-                                                str_detect(class_name, pattern="ESL-CONV-&-PRON-ADV ") ~ "ESL-CONV-&-PRON-ADVANCED",
-                                                
-                                                
-                                                TRUE ~ class_name))
-    
-    
-  }
-  
-  
-  else if (year == 2003 & semester == "FALL") {
-    df_demog <- df_demog %>% mutate(class_name = 
-                                      case_when(str_detect(class_name, pattern="ESL-CONV-&-PRON-INT ") ~ "ESL-CONV-&-PRON-INTERMEDIATE",
-                                                str_detect(class_name, pattern="ESL-CONV-&-PRON-ADV ") ~ "ESL-CONV-&-PRON-ADVANCED",
-                                                
-                                                
-                                                TRUE ~ class_name))
-    
-    
-  }
-  
-  else {
-    
-  }
-}
-#   else if (year == 2004) {}
-#   else if (year == 2005) {}
-#   else if (year == 2006) {}
-#   else if (year == 2007) {}
-#   else if (year == 2008) {}
-#   else if (year == 2009) {}
-#   else if (year == 2010) {}
-#   else if (year == 2011) {}
-#   else if (year == 2012) {}
-#   else if (year == 2013) {}
-#   else if (year == 2014) {}
-#   else if (year == 2015) {}
-#   else if (year == 2016) {}
-#   else if (year == 2016) {}
-#   else if (year == 2016) {}
-#   else if (year == 2016) {}
-#   
-#   else {
-#     
-#   }
-# } 
-#   
-
 
 
 #Improving demog details
@@ -149,7 +83,7 @@ df_dem_check <- df_better_dem %>% filter(is.na(class_id) & !is.na(class_name)) %
 #Then I tried to automate it using fuzzy-matching - issue is, most of the differences are only 1 or 2 characters
 # which leads to huge amounts of matches which actually complicates things more *sigh*
 
-View(df_dem_check %>% filter(year==2004, semester=="SPRING") %>% unique())
+View(df_dem_check %>% filter(year==2018, semester=="WINTER") %>% unique())
 
 #It looks like there are some classes in the early years (2000-2010) that were not captured with class ids
 # df_class, so we will create some new rows for df_class
@@ -266,57 +200,173 @@ df_class <- add_row(df_class, class_id = 200402, class_name = "ESL-3A-II-TTH", s
 df_class <- add_row(df_class, class_id = 200403, class_name = "ESL-2B", semester = 'WINTER', year = 2004, simple_standard_class = "2B" )
 df_class <- add_row(df_class, class_id = 200404, class_name = "COMPUTERS-101", semester = 'WINTER', year = 2004, simple_standard_class = "COMP-INTRO" )
 
+df_class <- add_row(df_class, class_id = 200420, class_name = "ESL-3B-I", semester = 'SUMMER', year = 2004, simple_standard_class = "3B" )
+df_class <- add_row(df_class, class_id = 200421, class_name = "ESL-3A-I", semester = 'SUMMER', year = 2004, simple_standard_class = "3A" )
+df_class <- add_row(df_class, class_id = 200422, class_name = "ESL-1A-I", semester = 'SUMMER', year = 2004, simple_standard_class = "1A" )
+df_class <- add_row(df_class, class_id = 200423, class_name = "ESL-2A-I", semester = 'SUMMER', year = 2004, simple_standard_class = "2A" )
+df_class <- add_row(df_class, class_id = 200424, class_name = "ESL-1B-I", semester = 'SUMMER', year = 2004, simple_standard_class = "1B" )
+df_class <- add_row(df_class, class_id = 200425, class_name = "EL/CIVICS-BASIC-II", semester = 'SUMMER', year = 2004, simple_standard_class = "CIVICS-INTRO" )
+df_class <- add_row(df_class, class_id = 200426, class_name = "COMPUTERS-101", semester = 'SUMMER', year = 2004, simple_standard_class = "COMP-INTRO" )
+df_class <- add_row(df_class, class_id = 200427, class_name = "ESL-4A-I", semester = 'SUMMER', year = 2004, simple_standard_class = "4A" )
+df_class <- add_row(df_class, class_id = 200428, class_name = "ESL-4B-I", semester = 'SUMMER', year = 2004, simple_standard_class = "4B" )
+df_class <- add_row(df_class, class_id = 200429, class_name = "ESL-BASIC-I", semester = 'SUMMER', year = 2004, simple_standard_class = "INTRO" )
+df_class <- add_row(df_class, class_id = 200430, class_name = "ESL-5A-I", semester = 'SUMMER', year = 2004, simple_standard_class = "5A" )
+df_class <- add_row(df_class, class_id = 200431, class_name = "ESL-2B-I", semester = 'SUMMER', year = 2004, simple_standard_class = "2B" )
+df_class <- add_row(df_class, class_id = 200432, class_name = "ESL-BASIC-II", semester = 'SUMMER', year = 2004, simple_standard_class = "INTRO" )
+df_class <- add_row(df_class, class_id = 200433, class_name = "ESL-5B-I", semester = 'SUMMER', year = 2004, simple_standard_class = "5B" )
+df_class <- add_row(df_class, class_id = 200434, class_name = "EL/CIVICS-BASIC-I", semester = 'SUMMER', year = 2004, simple_standard_class = "CIVICS-INTRO" )
+df_class <- add_row(df_class, class_id = 200435, class_name = "ESL-1A-II", semester = 'SUMMER', year = 2004, simple_standard_class = "1A" )
+df_class <- add_row(df_class, class_id = 200436, class_name = "GED", semester = 'SUMMER', year = 2004, simple_standard_class = "GED" )
+df_class <- add_row(df_class, class_id = 200437, class_name = "LITERACY-ADVANCED", semester = 'SUMMER', year = 2004, simple_standard_class = "LIT-ADV" )
+df_class <- add_row(df_class, class_id = 200438, class_name = "LITERACY-BEGINNERS", semester = 'SUMMER', year = 2004, simple_standard_class = "LIT-BEG" )
+df_class <- add_row(df_class, class_id = 200439, class_name = "LITERACY-INTERMEDIATE", semester = 'SUMMER', year = 2004, simple_standard_class = "LIT-INTER" )
+df_class <- add_row(df_class, class_id = 200440, class_name = "INTERNET", semester = 'SUMMER', year = 2004, simple_standard_class = "INTERNET" )
+df_class <- add_row(df_class, class_id = 200441, class_name = "MICROSOFT-POWER-POINT", semester = 'SUMMER', year = 2004, simple_standard_class = "MS-PP-2000" )
+df_class <- add_row(df_class, class_id = 200442, class_name = "ESL-5", semester = 'SUMMER', year = 2004, simple_standard_class = "5" )
+df_class <- add_row(df_class, class_id = 200443, class_name = "ESL-CONV-&-PRON-ADVANCED", semester = 'SUMMER', year = 2004, simple_standard_class = "CONV-&-PRON-ADV" )
+
+df_class <- add_row(df_class, class_id = 200444, class_name = "ESL-2A-II", semester = 'FALL', year = 2004, simple_standard_class = "2A" )
+df_class <- add_row(df_class, class_id = 200445, class_name = "ESL-2B-II", semester = 'FALL', year = 2004, simple_standard_class = "2B" )
+df_class <- add_row(df_class, class_id = 200446, class_name = "ESL-1B-II", semester = 'FALL', year = 2004, simple_standard_class = "1B" )
+df_class <- add_row(df_class, class_id = 200447, class_name = "WINDOWS-2000", semester = 'FALL', year = 2004, simple_standard_class = "WINDOWS-2000" )
+df_class <- add_row(df_class, class_id = 200448, class_name = "INTERNET", semester = 'FALL', year = 2004, simple_standard_class = "INTERNET" )
+
+df_class <- add_row(df_class, class_id = 200501, class_name = "ESL-ADVANCED", semester = "WINTER", year = 2005, simple_standard_class = "5" )
+df_class <- add_row(df_class, class_id = 200502, class_name = "LITERACY-ADVANCED", semester = "WINTER", year = 2005, simple_standard_class = "LIT-ADV" )
+df_class <- add_row(df_class, class_id = 200503, class_name = "LITERACY-INTERMEDIATE", semester = "WINTER", year = 2005, simple_standard_class = "LIT-INTER" )
+df_class <- add_row(df_class, class_id = 200504, class_name = "ESL-4A", semester = "WINTER", year = 2005, simple_standard_class = "4A" )
+df_class <- add_row(df_class, class_id = 200505, class_name = "ESL-CONV-&-PRON-INTERMEDIATE", semester = "WINTER", year = 2005, simple_standard_class = "CONV-&-PRON-INTER" )
+df_class <- add_row(df_class, class_id = 200506, class_name = "ESL-2B-II", semester = "WINTER", year = 2005, simple_standard_class = "2B" )
+df_class <- add_row(df_class, class_id = 200507, class_name = "ESL-1B", semester = "WINTER", year = 2005, simple_standard_class = "1B" )
+
+#THESE TWO ARE FILLING IN NAs from df_class
+df_class[3019, c("class_name")] <- "COMPUTERS-102"
+df_class[3020, c("class_name")] <- "ESL-3A"
 
 
-# 25	SUMMER	2004
-# 26	ESL-CONV-&-PRON-ADV	
+df_class <- add_row(df_class, class_id = 200520, class_name = "ESL-2A-I", semester = "SUMMER", year = 2005, simple_standard_class = "2A" )
+df_class <- add_row(df_class, class_id = 200521, class_name = "ESL-3A-I", semester = "SUMMER", year = 2005, simple_standard_class = "3A" )
+df_class <- add_row(df_class, class_id = 200522, class_name = "ESL-BASIC-I", semester = "SUMMER", year = 2005, simple_standard_class = "INTRO" )
+df_class <- add_row(df_class, class_id = 200523, class_name = "EL/CIVICS-BASIC-I", semester = "SUMMER", year = 2005, simple_standard_class = "CIVICS-INTRO" )
+df_class <- add_row(df_class, class_id = 200524, class_name = "ESL-1B-I", semester = "SUMMER", year = 2005, simple_standard_class = "1B" )
+df_class <- add_row(df_class, class_id = 200525, class_name = "ESL-1A-I", semester = "SUMMER", year = 2005, simple_standard_class = "1A" )
+df_class <- add_row(df_class, class_id = 200526, class_name = "ESL-BASIC-II", semester = "SUMMER", year = 2005, simple_standard_class = "INTRO" )
+df_class <- add_row(df_class, class_id = 200527, class_name = "ESL-2B-I", semester = "SUMMER", year = 2005, simple_standard_class = "2B" )
+df_class <- add_row(df_class, class_id = 200528, class_name = "ESL-3B-I", semester = "SUMMER", year = 2005, simple_standard_class = "3B" )
+df_class <- add_row(df_class, class_id = 200529, class_name = "ESL-3B", semester = "SUMMER", year = 2005, simple_standard_class = "3B" )
+df_class <- add_row(df_class, class_id = 200530, class_name = "LITERACY-ADVANCED", semester = "SUMMER", year = 2005, simple_standard_class = "LIT-ADV" )
+df_class <- add_row(df_class, class_id = 200531, class_name = "ESL-2B", semester = "SUMMER", year = 2005, simple_standard_class = "2B" )
+df_class <- add_row(df_class, class_id = 200532, class_name = "ESL-2A", semester = "SUMMER", year = 2005, simple_standard_class = "2A" )
+df_class <- add_row(df_class, class_id = 200533, class_name = "ESL-4A-I", semester = "SUMMER", year = 2005, simple_standard_class = "4A" )
+df_class <- add_row(df_class, class_id = 200534, class_name = "ESL-4B-I", semester = "SUMMER", year = 2005, simple_standard_class = "4B" )
+df_class <- add_row(df_class, class_id = 200535, class_name = "EL/CIVICS-BASIC-II", semester = "SUMMER", year = 2005, simple_standard_class = "CIVICS-INTRO" )
+df_class <- add_row(df_class, class_id = 200536, class_name = "COMPUTERS-101", semester = "SUMMER", year = 2005, simple_standard_class = "COMP-INTRO" )
+df_class <- add_row(df_class, class_id = 200537, class_name = "ESL-ADVANCED", semester = "SUMMER", year = 2005, simple_standard_class = "5" )
+df_class <- add_row(df_class, class_id = 200538, class_name = "ESL-4A", semester = "SUMMER", year = 2005, simple_standard_class = "4A" )
+df_class <- add_row(df_class, class_id = 200539, class_name = "LITERACY-BEGINNERS", semester = "SUMMER", year = 2005, simple_standard_class = "LIT-BEG" )
+df_class <- add_row(df_class, class_id = 200540, class_name = "LITERACY-INTERMEDIATE", semester = "SUMMER", year = 2005, simple_standard_class = "LIT-INTER" )
+df_class <- add_row(df_class, class_id = 200541, class_name = "ADVANCED", semester = "SUMMER", year = 2005, simple_standard_class = "5" )
+df_class <- add_row(df_class, class_id = 200542, class_name = "ESL-1A", semester = "SUMMER", year = 2005, simple_standard_class = "1A" )
+df_class <- add_row(df_class, class_id = 200543, class_name = "1A-II", semester = "SUMMER", year = 2005, simple_standard_class = "1A" )
+df_class <- add_row(df_class, class_id = 200544, class_name = "ESL-3A", semester = "SUMMER", year = 2005, simple_standard_class = "3A" )
 
-df_class <- add_row(df_class, class_id = 200420, class_name = "ESL-2B-I", semester = 'SUMMER', year = 2004, simple_standard_class = "2B" )
-df_class <- add_row(df_class, class_id = 200421, class_name = "ESL-BASIC-II", semester = 'SUMMER', year = 2004, simple_standard_class = "INTRO" )
-df_class <- add_row(df_class, class_id = 200422, class_name = "ESL-5B-I", semester = 'SUMMER', year = 2004, simple_standard_class = "5B" )
-df_class <- add_row(df_class, class_id = 200423, class_name = "EL/CIVICS-BASIC-I", semester = 'SUMMER', year = 2004, simple_standard_class = "CIVICS-INTRO" )
-df_class <- add_row(df_class, class_id = 200424, class_name = "ESL-1A-II", semester = 'SUMMER', year = 2004, simple_standard_class = "1A" )
-df_class <- add_row(df_class, class_id = 200425, class_name = "GED", semester = 'SUMMER', year = 2004, simple_standard_class = "GED" )
-df_class <- add_row(df_class, class_id = 200426, class_name = "LITERACY-ADVANCED", semester = 'SUMMER', year = 2004, simple_standard_class = "LIT-ADV" )
-df_class <- add_row(df_class, class_id = 200427, class_name = "LITERACY-BEGINNERS", semester = 'SUMMER', year = 2004, simple_standard_class = "LIT-BEG" )
-df_class <- add_row(df_class, class_id = 200428, class_name = "LITERACY-INTERMEDIATE", semester = 'SUMMER', year = 2004, simple_standard_class = "LIT-INTER" )
-df_class <- add_row(df_class, class_id = 200429, class_name = "INTERNET", semester = 'SUMMER', year = 2004, simple_standard_class = "INTERNET" )
-df_class <- add_row(df_class, class_id = 200430, class_name = "MICROSOFT-POWER-POINT", semester = 'SUMMER', year = 2004, simple_standard_class = "MS-PP-2000" )
-df_class <- add_row(df_class, class_id = 200431, class_name = "ESL-5", semester = 'SUMMER', year = 2004, simple_standard_class = "5" )
+df_class <- add_row(df_class, class_id = 200545, class_name = "ESL-3B", semester = "FALL", year = 2005, simple_standard_class = "3B" )
+df_class <- add_row(df_class, class_id = 200546, class_name = "ESL-3A", semester = "FALL", year = 2005, simple_standard_class = "3A" )
+df_class <- add_row(df_class, class_id = 200547, class_name = "ESL-2B", semester = "FALL", year = 2005, simple_standard_class = "2B" )
+df_class <- add_row(df_class, class_id = 200548, class_name = "ESL-EVE-7-9PM", semester = "FALL", year = 2005, simple_standard_class = "?" )
+df_class <- add_row(df_class, class_id = 200549, class_name = "ESL-1B", semester = "FALL", year = 2005, simple_standard_class = "1B" )
+df_class <- add_row(df_class, class_id = 200550, class_name = "ADVANCED", semester = "FALL", year = 2005, simple_standard_class = "5" )
+df_class <- add_row(df_class, class_id = 200551, class_name = "ESL-4A", semester = "FALL", year = 2005, simple_standard_class = "4A" )
+df_class <- add_row(df_class, class_id = 200552, class_name = "ESL-4B", semester = "FALL", year = 2005, simple_standard_class = "4B" )
+df_class <- add_row(df_class, class_id = 200553, class_name = "ESL-5B", semester = "FALL", year = 2005, simple_standard_class = "5B" )
+df_class <- add_row(df_class, class_id = 200554, class_name = "1A-II", semester = "FALL", year = 2005, simple_standard_class = "1A" )
 
-df_class <- add_row(df_class, class_id = 200432, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
+LITERACY-BEGINNERS	WINTER	2006
+2	LITERACY-ADVANCED	WINTER	2006
+3	LITERACY-INTERMEDIATE	WINTER	2006
+4	COMPUTERS-102	WINTER	2006
+5	ESL-EVE-7-9PM
 
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
-
-df_class <- add_row(df_class, class_id = 20042, class_name = "", semester = 'SUMMER', year = 2004, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 200601, class_name = "", semester = "WINTER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 200602, class_name = "", semester = "WINTER", year = 2006, simple_standard_class = "" )
 
 
+ESL-EVE-7-9PM	SPRING	2006
+2	ESL-5B	SPRING
+
+df_class <- add_row(df_class, class_id = 20061, class_name = "", semester = "SPRING", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20061, class_name = "", semester = "SPRING", year = 2006, simple_standard_class = "" )
+
+ESL-3A	SUMMER	2006
+2	ESL-2A	SUMMER	2006
+3	ESL-ADVANCED	SUMMER	2006
+4	EL/CIVICS-BASIC-I	SUMMER	2006
+5	ESL-4B	SUMMER	2006
+6	EL/CIVICS-BASIC-II	SUMMER	2006
+7	ESL-1A-I	SUMMER	2006
+8	ESL-1B	SUMMER	2006
+9	ESL-5B	SUMMER	2006
+10	LITERACY-BEGINNERS	SUMMER	2006
+11	ESL-4A	SUMMER	2006
+12	ESL-1A-II	SUMMER	2006
+13	ESL-5A	SUMMER	2006
+14	ESL-3B	SUMMER	2006
+15	LITERACY-INTERMEDIATE	SUMMER	2006
+16	ESL-2B	SUMMER	2006
+17	LITERACY-ADVANCED	SUMMER	2006
+18	CALCULATOR	SUMMER	2006
+19	ESL-EVE-7-9PM	SUMMER
+
+
+
+
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20062, class_name = "", semester = "SUMMER", year = 2006, simple_standard_class = "" )
+
+
+ESL-1B-I	FALL	2006
+2	ESL-1A-III	FALL	2006
+3	GED-SPANISH	FALL	2006
+4	ESL-1B-II	FALL	2006
+5	ESL-3A-I	FALL	2006
+6	ESL-5A-I	FALL	2006
+7	ESL-EVE-7-9PM	FALL
+
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+df_class <- add_row(df_class, class_id = 20063, class_name = "", semester = "FALL", year = 2006, simple_standard_class = "" )
+
+df_class <- add_row(df_class, class_id = 200701, class_name = "", semester = "WINTER", year = 2007, simple_standard_class = "" )
 
 
 
 
 
 #After adding in missing class data and fixing class names:
+
+#We need to check by semester and year and see if the new class rows fill in any of the NAs in df_class.
 
 
 #Since the demographics data doesn't have a unique class identifier, just the name, this leads to a lot of duplicate creation
@@ -408,9 +458,72 @@ df_new_dem_check <- df_new_better_dem %>% filter(is.na(class_id) & !is.na(class_
 #     
 #   }
 #   
-#   
 # }
 # 
+#This for loop iterates over the data that has merging issues from df_demog
+# #and performs renaming tasks for class_name for each year (and by semester when needed)
+# #This looks like there could be a better way to code it, but unfortunately since each year has
+# #different issues, it has be done one year at at time yippeeeeeee
+# 
+# years <- seq(2000, 2019)
+# 
+# for (year in years) {
+#   
+#   
+#   if (year == 2001 & semester== "SUMMER") {
+#     df_demog <- df_demog %>% mutate(class_name = 
+#                                       case_when(,
+#                                                 TRUE ~ class_name))
+#   }
+#   
+#   else if (year == 2003 & semester == "SUMMER") {
+#     df_demog <- df_demog %>% mutate(class_name = 
+#                                       case_when(
+#                                         
+#                                         TRUE ~ class_name))
+#     
+#   }
+#   
+#   
+#   else if (year == 2003 & semester == "FALL") {
+#     df_demog <- df_demog %>% mutate(class_name = 
+#                                       case_when(str_detect(class_name, pattern="ESL-CONV-&-PRON-INT ") ~ "ESL-CONV-&-PRON-INTERMEDIATE",
+#                                                 str_detect(class_name, pattern="ESL-CONV-&-PRON-ADV ") ~ "ESL-CONV-&-PRON-ADVANCED",
+#                                                 
+#                                                 
+#                                                 TRUE ~ class_name))
+#     
+#     
+#   }
+#   
+#   else {
+#     
+#   }
+# }
+#   else if (year == 2004) {}
+#   else if (year == 2005) {}
+#   else if (year == 2006) {}
+#   else if (year == 2007) {}
+#   else if (year == 2008) {}
+#   else if (year == 2009) {}
+#   else if (year == 2010) {}
+#   else if (year == 2011) {}
+#   else if (year == 2012) {}
+#   else if (year == 2013) {}
+#   else if (year == 2014) {}
+#   else if (year == 2015) {}
+#   else if (year == 2016) {}
+#   else if (year == 2016) {}
+#   else if (year == 2016) {}
+#   else if (year == 2016) {}
+#   
+#   else {
+#     
+#   }
+# } 
+#   
+
+
 
 
 
