@@ -2,12 +2,12 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Database")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Database/Archive")
 
 
-df_demographics <- read.csv("2000-2019_student-demographics.csv", stringsAsFactors = FALSE)
+df_demographics <- read.csv("OLD_2000-2019_student-demographics.csv", stringsAsFactors = FALSE)
 df_finance <- read.csv("2000-2020-01-15_financial-data.csv", stringsAsFactors = FALSE)
-df_assessment <- read.csv("2015-2019_student-assessments.csv", stringsAsFactors = FALSE)
+df_assessment <- read.csv("OLD_2015-2019_student-assessments.csv", stringsAsFactors = FALSE)
 
 
 #Due to the nature of the data, it is best to keep the finances separate as the merge

@@ -6,7 +6,7 @@ library(purrr)
 library(glue)
 #library(rlist)
 
-setwd("/Users/Daniel/Documents/wec")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Core-Demographics/Country-of-Origin/Data/Processed")
 
 df <- read.csv("country_class.csv", stringsAsFactors = FALSE, header=1, encoding="UTF-8")
 
@@ -81,7 +81,7 @@ View(count(df, vars=country))
 #Automation Take 2 
 
 #Bring in official country names to aid in data cleaning
-countries <- read.csv("countries.csv", stringsAsFactors = FALSE)
+countries <- read.csv("../countries-crosswalk.csv", stringsAsFactors = FALSE)
 countries <- countries %>% select(Country) %>% unlist(.) %>% as.vector(.) %>% str_trim(., side="both")
 
 # %in% does not work like in python, need to use stringr

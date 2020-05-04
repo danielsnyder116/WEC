@@ -4,7 +4,7 @@ library(tidyr)
 library(readr)
 library(ggplot2)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Education-Impact/Data/Processed")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Education-Impact/Data/Processed")
 
 df <- read.csv("2015-2019_intermediate_educational-performance-data.csv", stringsAsFactors = FALSE)
 
