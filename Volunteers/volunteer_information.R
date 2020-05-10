@@ -84,8 +84,7 @@ df_volunteers <- distinct(df_volunteers)
 #volunteers so need to bring that information in. 
 
 
-
-#write.csv(df_volunteers, "../../Database/2000-2020_volunteers_complete.csv", row.names=FALSE)
+write.csv(df_volunteers, "../../Database/2000-2020_volunteers_complete.csv", row.names=FALSE)
 
 
 

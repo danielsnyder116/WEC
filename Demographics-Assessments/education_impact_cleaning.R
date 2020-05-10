@@ -59,27 +59,12 @@ df <- df %>% mutate(year = str_trunc(year, width=4, ellipsis = ""))
 #Getting rid of a few rows of 90% NA data and thus unusable
 df <- df %>% filter(!is.na(year))
 
-###################### Visualizing Data (EDA) ###########################
 
-#Attendance distribution from 2015-2019 overall
-p <- ggplot(df, aes(x=attendance)) + geom_histogram(bins=5, binwidth = .5)
-p
-
-#Attendance grouped by Semester
-p_color <- ggplot(df, aes(x=attendance, fill=semester)) + 
-                  geom_histogram(bins=5, binwidth = .5) +
-                  facet_grid(.~ semester) + theme_light()
-p_color
+write.csv(df, "../Output/2015-2019_student-assessments.csv", row.names = FALSE)
 
 
-#By Year
-ggplot(df, aes(x=attendance, fill=year)) + 
-  geom_histogram(bins=5, binwidth = .5) +
-  facet_grid(.~ semester) + theme_light() + facet_grid(.~year)
 
-count(df, vars=year)
-
-
+#### CODE GRAVEYARD #### 
 # # Failed attempt to write loop to parse numbers for all four columns
 # #Kept getting an error involving is.character(x)
 # columns <- list(final_exam_score, attendance, participation, language_score, total_eval_score)

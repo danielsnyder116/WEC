@@ -6,20 +6,7 @@ setwd("C:/Users/602770/Downloads/volunteer/wec/Database/Archive")
 
 
 df_demographics <- read.csv("OLD_2000-2019_student-demographics.csv", stringsAsFactors = FALSE)
-df_finance <- read.csv("2000-2020-01-15_financial-data.csv", stringsAsFactors = FALSE)
 df_assessment <- read.csv("OLD_2015-2019_student-assessments.csv", stringsAsFactors = FALSE)
-
-
-#Due to the nature of the data, it is best to keep the finances separate as the merge
-#leads to a less useful conglomeration of data.
-
-## GETTING RID OF DUPLICATES IN FINANCE DATA
-nrow(df_finance)
-nrow(distinct(df_finance))
-
-df_finance <- distinct(df_finance)
-
-write.csv(df_finance,"2000-2020-01-15_financial-data.csv" )
 
 
 ################ DEMOGRAPHIC/ASSESSMENT DATA ################ 
@@ -50,8 +37,8 @@ nrow(distinct(df_student))
 #Getting rid of the couple of duplicate rows
 df_student <- distinct(df_student)
 
-#write.csv(df_student, "2000-2019_student-demographics-and-assessment-data.csv", row.names=FALSE)
 
+write.csv(df_student, "2000-2019_student-demographics-and-assessment-data.csv", row.names=FALSE)
 
 
 ########## EXTRA CODE ##########

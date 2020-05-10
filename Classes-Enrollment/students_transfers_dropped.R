@@ -4,7 +4,7 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Totals_Transfers_Dropped")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Totals_Transfers_Dropped/Raw")
 
 files <- list.files()
 

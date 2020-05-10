@@ -130,7 +130,7 @@ df <- df %>% mutate(complete_standard_class = paste0(simple_standard_class, "_",
 #So now back up to 3,033 classes with 27 NA class names brought back in 
 #df <- full_join(df, df_with_missing)
 
-#Creating classication column to allow for grouping
+#Creating classification column to allow for grouping
 df <- df %>% mutate(class_category = case_when(  
                       str_detect(simple_standard_class, pattern = "CONV|ADV-GRAM|ADV-FINAL") ~ "ESL Conversation",
                       str_detect(simple_standard_class, pattern = "WRITING") ~ "ESL Conversation & Writing",

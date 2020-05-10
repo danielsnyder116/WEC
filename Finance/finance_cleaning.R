@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyr)
 library(lubridate)
 
-setwd("/Users/Daniel/Documents/wec")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Finance-Payments/Raw")
 
 df <- read.csv('finance_data.csv', stringsAsFactors = FALSE, header = FALSE)
 
@@ -47,6 +47,16 @@ count(df, vars=`year`)
 #If course has '.', replace with NA
 df <- df  %>% mutate(course=na_if(course, '.'))
 
-#Current state of data sending to Renee
-#write.csv(df, 'financial_data_2000_to_20200115.csv', row.names=FALSE)
+
+## GETTING RID OF DUPLICATES IN FINANCE DATA
+nrow(df)
+nrow(distinct(df))
+
+df <- distinct(df)
+
+#Ensuring no extra spaces (missed this earlier, whoops!)
+df <- df %>% mutate(first_name=str_squish(first_name))
+
+write.csv(df_finance,"Óutput/2000-2020-01-15_financial-data.csv" )
+
 
