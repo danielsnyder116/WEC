@@ -83,7 +83,7 @@ nrow(df_details %>% filter(DAYS==""))
 nrow(df_details)
 259/3034
 
-#write.csv(df_details, "Processed/TEMP_manual-class-info.csv", row.names=FALSE)
+write.csv(df_details, "Processed/TEMP_manual-class-info.csv", row.names=FALSE)
 
 # Based on values seen in data, filled in most ? with SUN. There are some other cases that could be filled in
 # based on the name of the class, the time, or its relationship to other classes offered during that semester

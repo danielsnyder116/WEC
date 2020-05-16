@@ -6,7 +6,7 @@ library(purrr)
 library(glue)
 #library(rlist)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Core-Demographics/Country-of-Origin/Data/Processed")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Core-Demographics/Country-of-Origin/Processed")
 
 df <- read.csv("country_class.csv", stringsAsFactors = FALSE, header=1, encoding="UTF-8")
 
