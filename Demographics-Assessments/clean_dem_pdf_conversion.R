@@ -32,7 +32,7 @@ file <- list.files(pattern="*.pdf")[9]
   #We want to split on \r\n and a digit but can't because str_split gets rid of the digit and we need it 
   #Will have to take of it as a dataframe
   
-  pdf_text <- as.data.frame(str_split(pdf_text, pattern="\r\n"))
+  pdf_text <- as.data.frame(str_split(pdf_text, pattern="\r\n"), stringsAsFactors = FALSE)
   
   colnames(pdf_text) <- "data"
   
@@ -40,11 +40,28 @@ file <- list.files(pattern="*.pdf")[9]
   #We need to filter out any rows without data by name since we have rows with data that don't start with
   #student id due to the pdf formatting
   
-  pdf_text <- pdf
+  pdf_text <- pdf_text %>% filter(!str_detect(data, pattern = "Washington|Student|Last|School|Fisrt|First|w/|under|Low|Income|Employment|Status|Years|Education|Page"))
+  pdf_text <- pdf_text %>% filter(data != "" & !is.na(data))
   
-  #Isolating rows with data
-  pdf_text <- pdf_text %>% filter(str_detect(data, pattern="\\d\\d\\d\\d\\d"))
+ length_pdf_text <- nrow(pdf_text)
+
+  #For each row, assuming the first row is fine
+  for (i in 2:length_pdf_text) {
+    
+    #if the row doesn't start with a student id but previous one does
+    if ( !str_detect(pdf_text$data[i], pattern = "\\d\\d\\d\\d\\d\\d\\d") & str_detect(pdf_text$data[i-1], pattern = "\\d\\d\\d\\d\\d\\d\\d")) {
+
+      #We take this data and add it to the previous row
+      pdf_text$data[i-1] <- paste0(pdf_text$data[i-1], pdf_text$data[i])
+      
+      #We then delete that row
+      pdf_text <- pdf_text %>% slice(-i)
+    }
+    
+  }
   
+ 
+ test <- pdf_text %>% slice(-29)
   #Getting the semester and year info from the file name
   pdf_text <- pdf_text %>% mutate(semester=str_to_upper(unlist(str_split(file, "_"))[1]))
   pdf_text <- pdf_text %>% mutate(year=unlist(str_split(unlist(str_split(file, "\\."))[1], "_"))[2])
@@ -116,6 +133,10 @@ glimpse(df_final)
 
   
 ### CODE GRAVEYARD ### 
+
+#Isolating rows with data
+# pdf_text <- pdf_text %>% filter(str_detect(data, pattern="\\d\\d\\d\\d\\d"))
+
   #Unfortunately in the raw text there is no indication of where last name(s) and first name(s) start. 
   #We have the student id and will do what we can but will remember that this is the best solution to a not ideal
   # situation. Itsa okay! Mario!
