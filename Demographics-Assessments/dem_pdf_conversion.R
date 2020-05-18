@@ -8,10 +8,10 @@ library(tidyr)
 
 setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Basics/Raw")
 
-file <- list.files(pattern="*.pdf")[9]
+files <- list.files(pattern="*.pdf")
 
 
-#for (file in files) {
+for (file in files) {
   
 ### GET TEXT ### 
   pdf_text <- extract_text(file, encoding='UTF-8')
@@ -43,25 +43,48 @@ file <- list.files(pattern="*.pdf")[9]
   pdf_text <- pdf_text %>% filter(!str_detect(data, pattern = "Washington|Student|Last|School|Fisrt|First|w/|under|Low|Income|Employment|Status|Years|Education|Page"))
   pdf_text <- pdf_text %>% filter(data != "" & !is.na(data))
   
- length_pdf_text <- nrow(pdf_text)
-
-  #For each row, assuming the first row is fine
-  for (i in 2:length_pdf_text) {
-    
-    #if the row doesn't start with a student id but previous one does
-    if ( !str_detect(pdf_text$data[i], pattern = "\\d\\d\\d\\d\\d\\d\\d") & str_detect(pdf_text$data[i-1], pattern = "\\d\\d\\d\\d\\d\\d\\d")) {
-
-      #We take this data and add it to the previous row
-      pdf_text$data[i-1] <- paste0(pdf_text$data[i-1], pdf_text$data[i])
-      
-      #We then delete that row
-      pdf_text <- pdf_text %>% slice(-i)
-    }
-    
-  }
-  
  
- test <- pdf_text %>% slice(-29)
+   #Taking care of names in own row
+   
+   length_pdf_text <- nrow(pdf_text) -1
+ 
+   
+   #For each row, assuming the first row is fine
+   for (i in 1:length_pdf_text) {
+     
+     #if the row doesn't start with a student id but previous one does
+     if ( !str_detect(pdf_text$data[i+1], pattern = "\\d\\d\\d\\d\\d\\d\\d+|SKIP") & 
+          str_detect(pdf_text$data[i], pattern = "\\d\\d\\d\\d\\d\\d\\d+")) {
+       
+       #We take this data and add it to the previous row
+       pdf_text$data[i] <- paste0(pdf_text$data[i], pdf_text$data[i+1])
+       
+       #We then replace the data to make it easy to delete later. Deleting
+       # in the middle of the loop causes issues
+       pdf_text$data[i+1] <- "SKIP"
+       
+     }
+   
+   }
+ 
+   for (i in 2:length_pdf_text) { 
+     
+     if (str_detect(pdf_text$data[i], pattern = "SKIP") & 
+         str_detect(pdf_text$data[i+1], pattern = "^\\(\\d|^[:alpha:]")) {
+       
+       #We do the same thing but skip the skip row
+       pdf_text$data[i-1] <- paste(pdf_text$data[i-1], pdf_text$data[i+1])
+       
+       #If there is additional info, we replace this with SKIP for removal
+       pdf_text$data[i+1] <- "SKIP"
+       
+       
+     }
+   }
+ 
+  pdf_text <- pdf_text %>% filter(!str_detect(data, pattern = "SKIP"))
+ 
+ 
   #Getting the semester and year info from the file name
   pdf_text <- pdf_text %>% mutate(semester=str_to_upper(unlist(str_split(file, "_"))[1]))
   pdf_text <- pdf_text %>% mutate(year=unlist(str_split(unlist(str_split(file, "\\."))[1], "_"))[2])
@@ -114,14 +137,14 @@ file <- list.files(pattern="*.pdf")[9]
     df_final <- df
     
   #Weird case - I guess if you do just an if else statement, the else has to be on the same line as the 
-  # end of the if curly brackets ¯\_(ツ)_/¯.
+  # end of the if curly brackets 
   } else { 
     
     df_final <- bind_rows(df_final, df)
       
   }
 
-#}
+}
   
 
 df_final <- df_final %>% mutate(age = as.numeric(age), education_years = as.numeric(education_years))
