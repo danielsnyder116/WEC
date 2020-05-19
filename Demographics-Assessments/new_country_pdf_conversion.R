@@ -6,9 +6,9 @@ library(tidyr)
 
 setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Country-of-Origin/Raw")
 
-file <- list.files(pattern = "*.pdf")[19]
+files <- list.files(pattern = "*.pdf")
 
-#for (file in files) {
+for (file in files) {
 
 # GET TEXT #
 
@@ -49,11 +49,24 @@ file <- list.files(pattern = "*.pdf")[19]
  
  
  #Taking care of names in own row
- 
- length_pdf_text <- nrow(pdf_text) -1
- 
- length_pdf_text
- 
+ #Has to be one less than nrow to make sure we don't do an extra row due to +1 
+ #Extra rows are automatically NAs which will throw an error.
+    if ( nrow(pdf_text) == 0) {
+       
+     } 
+    
+    else if (nrow(pdf_text) > 0 & nrow(pdf_text) <= 3) {
+       
+       length_pdf_text <- 3
+       
+       pdf_text <- add_row(pdf_text, data = " ")
+       pdf_text <- add_row(pdf_text, data = " ")
+       
+    }
+       
+   else {
+       length_pdf_text <- nrow(pdf_text) - 1
+       }
 
  #For each row, assuming the first row is fine
  for (i in 1:length_pdf_text) {
@@ -73,12 +86,16 @@ file <- list.files(pattern = "*.pdf")[19]
    
  }
  
+ 
+ 
+ #Round 2
  for (i in 2:length_pdf_text) { 
    
+    #If we detect a SKIP and the row after is still not a student id (extra data)
     if (str_detect(pdf_text$data[i], pattern = "SKIP") & 
         str_detect(pdf_text$data[i+1], pattern = "^\\(\\d|^[:alpha:]")) {
  
-      #We do the same thing but skip the skip row
+      #We do the same thing but add the data two rows up
       pdf_text$data[i-1] <- paste(pdf_text$data[i-1], pdf_text$data[i+1])
       
       #If there is additional info, we replace this with SKIP for removal
@@ -90,9 +107,31 @@ file <- list.files(pattern = "*.pdf")[19]
  
  df <- pdf_text %>% filter(!str_detect(data, pattern = "SKIP"))
  
- df <-pdf_text  %>% separate(data, c("student_id", "more_rest"), extra = "merge", sep = " ")
+ df <- df  %>% separate(data, c("student_id", "more_rest"), extra = "merge", sep = " ")
+ 
+ df <- df %>% separate(rest, c("trash", "teacher","class_name", "more_trash"), extra = "merge", sep = ":")
+ 
+ df <- df %>% mutate(teacher = str_remove(teacher, pattern = " Class Name"),
+                     class_name = str_remove(class_name, pattern = " AMSession| PMSession| WeekendSession"))
  
  
  
+ if (file == "fall_2000_cc.pdf"){
+    
+    df_final <- df
+    
+    #Weird case - I guess if you do just an if else statement, the else has to be on the same line as the 
+    # end of the if curly brackets 
+    } else { 
+    
+    df_final <- bind_rows(df_final, df)
+    
+    }
  
-#}
+ 
+}
+
+
+
+
+
