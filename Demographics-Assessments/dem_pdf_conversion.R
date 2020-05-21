@@ -138,9 +138,7 @@ for (file in files) {
   } else { 
     
     df_final <- bind_rows(df_final, df)
-      
   }
-
 }
   
 

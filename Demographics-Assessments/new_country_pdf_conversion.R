@@ -6,22 +6,20 @@ library(tidyr)
 
 setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Country-of-Origin/Raw")
 
-files <- list.files(pattern = "*.pdf")
+file <- list.files(pattern = "*.pdf")[3]
 
 
 #This loop takes around 10 minutes to run
-for (file in files) {
+#for (file in files) {
 
 # GET TEXT #
 
  pdf_text <- extract_text(file, encoding="UTF-8")
- 
  pdf_text <- as.data.frame(str_split(pdf_text, pattern = "\r\n"), stringsAsFactors = FALSE)
   
  colnames(pdf_text) <- "data"
   
  pdf_text <- pdf_text %>% filter(!str_detect(data, pattern = "Washington|Student|School|Class Roster|Building|Home|Page"))
- 
  pdf_text <- pdf_text %>% filter(data != "")
  
  #Getting the semester and year info from the file name
@@ -42,7 +40,6 @@ for (file in files) {
  }
  
  #Now we can use fill() to fill in the values 
- 
  pdf_text <- pdf_text %>% fill(rest, .direction = "down")
  
  #Get rid of teacher rows now that we have what we need
@@ -63,7 +60,7 @@ for (file in files) {
        
     } else {
        length_pdf_text <- nrow(pdf_text) - 1
-       }
+    }
 
  #For each row, assuming the first row is fine
  for (i in 1:length_pdf_text) {
@@ -80,7 +77,6 @@ for (file in files) {
      pdf_text$data[i+1] <- "SKIP"
      
    }
-   
  }
  
  
@@ -137,7 +133,6 @@ for (file in files) {
        df$country[k] <- countries[i]
        df$name[k] <- str_replace(df$name[k], pattern = countries[i], replacement = "")
      }
-     
    }
  }
  
@@ -163,11 +158,13 @@ for (file in files) {
       df_final <- bind_rows(df_final, df)
       
       }
+  
  
- 
-}
+#}
 
+View(count(df_final, vars = country))
+nrow(df_final)
 
-
-
+df_final <- distinct(df_final)
+nrow(df_final)
 
