@@ -8,6 +8,8 @@ setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Countr
 
 files <- list.files(pattern = "*.pdf")
 
+
+#This loop takes around 10 minutes to run
 for (file in files) {
 
 # GET TEXT #
@@ -39,7 +41,6 @@ for (file in files) {
    }
  }
  
- 
  #Now we can use fill() to fill in the values 
  
  pdf_text <- pdf_text %>% fill(rest, .direction = "down")
@@ -53,18 +54,14 @@ for (file in files) {
  #Extra rows are automatically NAs which will throw an error.
     if ( nrow(pdf_text) == 0) {
        
-     } 
-    
-    else if (nrow(pdf_text) > 0 & nrow(pdf_text) <= 3) {
+     } else if (nrow(pdf_text) > 0 & nrow(pdf_text) <= 3) {
        
        length_pdf_text <- 3
        
        pdf_text <- add_row(pdf_text, data = " ")
        pdf_text <- add_row(pdf_text, data = " ")
        
-    }
-       
-   else {
+    } else {
        length_pdf_text <- nrow(pdf_text) - 1
        }
 
@@ -87,7 +84,6 @@ for (file in files) {
  }
  
  
- 
  #Round 2
  for (i in 2:length_pdf_text) { 
    
@@ -105,28 +101,68 @@ for (file in files) {
     }
  }
  
+ #Cleaning up items (getting rid of SKIP rows and dividing up long string of data)
  df <- pdf_text %>% filter(!str_detect(data, pattern = "SKIP"))
  
  df <- df  %>% separate(data, c("student_id", "more_rest"), extra = "merge", sep = " ")
  
  df <- df %>% separate(rest, c("trash", "teacher","class_name", "more_trash"), extra = "merge", sep = ":")
  
+ #Creates teacher column and gets rid of session junk
  df <- df %>% mutate(teacher = str_remove(teacher, pattern = " Class Name"),
                      class_name = str_remove(class_name, pattern = " AMSession| PMSession| WeekendSession"))
  
  
  
- if (file == "fall_2000_cc.pdf"){
-    
-    df_final <- df
-    
-    #Weird case - I guess if you do just an if else statement, the else has to be on the same line as the 
-    # end of the if curly brackets 
-    } else { 
-    
-    df_final <- bind_rows(df_final, df)
-    
-    }
+ #Gets rid of unnecessary punctuation and phone numbers and leaves anchor to separate out for country
+ df <- df %>% mutate(more_rest = str_replace_all(more_rest, pattern = "\\d|\\(|\\)|\\.|\\/|\\+|\\=|\\--| \\-", ""))
+ 
+ 
+ #Create country column
+ df <- df %>% separate(more_rest, c("name", "country"), sep = "  - ", extra = "merge")
+
+
+
+ #Bring in official country names to aid in data cleaning
+ countries <- read.csv("../countries-crosswalk.csv", stringsAsFactors = FALSE)
+ countries <- countries %>% select(Country) %>% unlist(.) %>% as.vector(.) %>% str_trim(., side="both")
+ 
+ #If a correct country name is within other gobbledygook in a row,
+ # this double for loop replaces that row with just the country name
+ # deals with the issue of misparsed names included as part of the country
+ 
+ for (i in 1:length(countries)) {
+   for (k in 1:nrow(df)) {
+     if (str_detect(df$name[k], regex(countries[i], ignore_case = TRUE))) {
+       df$country[k] <- countries[i]
+       df$name[k] <- str_replace(df$name[k], pattern = countries[i], replacement = "")
+     }
+     
+   }
+ }
+ 
+  #Clean Country Column
+  df <- df %>% mutate(country = str_squish(str_remove_all(country, pattern = "^ |^  |\\-")))
+  
+  #Clean Name Column
+  df <- df %>% mutate(name = str_remove_all(name, pattern = " \\-\\-"))
+  
+  df <- df %>% select(student_id, name, country, semester, year, class_name, teacher)
+
+  
+#Putting it all together
+ 
+  if (file == "fall_2000_cc.pdf"){
+      
+      df_final <- df
+      
+      #Weird case - I guess if you do just an if else statement, the else has to be on the same line as the 
+      # end of the if curly brackets 
+      } else { 
+      
+      df_final <- bind_rows(df_final, df)
+      
+      }
  
  
 }

@@ -78,12 +78,10 @@ for (file in files) {
        #If there is additional info, we replace this with SKIP for removal
        pdf_text$data[i+1] <- "SKIP"
        
-       
      }
    }
  
   pdf_text <- pdf_text %>% filter(!str_detect(data, pattern = "SKIP"))
- 
  
   #Getting the semester and year info from the file name
   pdf_text <- pdf_text %>% mutate(semester=str_to_upper(unlist(str_split(file, "_"))[1]))
@@ -126,13 +124,12 @@ for (file in files) {
   #Employment
   df <- df %>% mutate(employment_status = str_extract(half_two, pattern = "Full-Time|Part-Time|Looking|Not Applicable|Not-Employed"))
   
- 
   #Getting rid of unneeded columns and rearranging
   df <- df %>% select(student_id, name, age, gender, ethnicity, employment_status, 
                       zip_code, education_years, semester, year)
   
   
-  
+  #Putting it all together
   if (file == "fall_2000.pdf") {
     df_final <- df
     
