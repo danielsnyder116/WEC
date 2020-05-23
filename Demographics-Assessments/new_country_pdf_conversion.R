@@ -6,11 +6,15 @@ library(tidyr)
 
 setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Country-of-Origin/Raw")
 
-file <- list.files(pattern = "*.pdf")[3]
+#Bring in country names to aid in data cleaning
+countries <- read.csv("../countries.csv", stringsAsFactors = FALSE)
+countries <- countries %>% select(Country) %>% unlist(.) %>% as.vector(.) %>% str_trim(., side="both")
+
+files <- list.files(pattern = "*.pdf")
 
 
 #This loop takes around 10 minutes to run
-#for (file in files) {
+for (file in files) {
 
 # GET TEXT #
 
@@ -66,8 +70,9 @@ file <- list.files(pattern = "*.pdf")[3]
  for (i in 1:length_pdf_text) {
    
    #if the row doesn't start with a student id but previous one does
-   if ( !str_detect(pdf_text$data[i+1], pattern = "\\d\\d\\d\\d\\d\\d\\d+|SKIP") & 
-         str_detect(pdf_text$data[i], pattern = "\\d\\d\\d\\d\\d\\d\\d+")) {
+   #Most ids are at least 7 digits but a few are less - shouldn't cause an issue to lower \\d to five
+   if ( !str_detect(pdf_text$data[i+1], pattern = "\\d\\d\\d\\d\\d+|SKIP") & 
+         str_detect(pdf_text$data[i], pattern = "\\d\\d\\d\\d\\d+")) {
      
      #We take this data and add it to the previous row
      pdf_text$data[i] <- paste0(pdf_text$data[i], pdf_text$data[i+1])
@@ -92,7 +97,6 @@ file <- list.files(pattern = "*.pdf")[3]
       
       #If there is additional info, we replace this with SKIP for removal
       pdf_text$data[i+1] <- "SKIP"
-
  
     }
  }
@@ -109,7 +113,6 @@ file <- list.files(pattern = "*.pdf")[3]
                      class_name = str_remove(class_name, pattern = " AMSession| PMSession| WeekendSession"))
  
  
- 
  #Gets rid of unnecessary punctuation and phone numbers and leaves anchor to separate out for country
  df <- df %>% mutate(more_rest = str_replace_all(more_rest, pattern = "\\d|\\(|\\)|\\.|\\/|\\+|\\=|\\--| \\-", ""))
  
@@ -117,11 +120,6 @@ file <- list.files(pattern = "*.pdf")[3]
  #Create country column
  df <- df %>% separate(more_rest, c("name", "country"), sep = "  - ", extra = "merge")
 
-
-
- #Bring in official country names to aid in data cleaning
- countries <- read.csv("../countries-crosswalk.csv", stringsAsFactors = FALSE)
- countries <- countries %>% select(Country) %>% unlist(.) %>% as.vector(.) %>% str_trim(., side="both")
  
  #If a correct country name is within other gobbledygook in a row,
  # this double for loop replaces that row with just the country name
@@ -129,7 +127,13 @@ file <- list.files(pattern = "*.pdf")[3]
  
  for (i in 1:length(countries)) {
    for (k in 1:nrow(df)) {
-     if (str_detect(df$name[k], regex(countries[i], ignore_case = TRUE))) {
+     
+     #If a country's name is found in name and the country column is NA (need the second condition
+     #to ensure that we don't mess with rows where person's name contains a country name -eg. Argentina, Chile, Cuba)
+     #we also add in the paste0 and $ to ensure it looks at the end of the row name
+     #This leads to cases of former Yugoslavic countries to not be caught since the name isn't the end of the 
+     # phrase, that's okay.
+     if (str_detect(df$name[k], regex(paste0(" ", countries[i], "$"), ignore_case = TRUE)) & is.na(df$country[k])) {
        df$country[k] <- countries[i]
        df$name[k] <- str_replace(df$name[k], pattern = countries[i], replacement = "")
      }
@@ -140,9 +144,13 @@ file <- list.files(pattern = "*.pdf")[3]
   df <- df %>% mutate(country = str_squish(str_remove_all(country, pattern = "^ |^  |\\-")))
   
   #Clean Name Column
-  df <- df %>% mutate(name = str_remove_all(name, pattern = " \\-\\-"))
+  df <- df %>% mutate(name = str_remove_all(name, pattern = "\\-\\-| \\-\\- | \\- |\\-$"))
   
   df <- df %>% select(student_id, name, country, semester, year, class_name, teacher)
+  
+  
+  #Get rid of empty rows
+  df <- df %>% filter(!str_detect(student_id, pattern = "^ |\\.|\\d\\d\\d\\-"))
 
   
 #Putting it all together
@@ -160,11 +168,32 @@ file <- list.files(pattern = "*.pdf")[3]
       }
   
  
-#}
+}
 
-View(count(df_final, vars = country))
+
 nrow(df_final)
+
+#Get rid of rows where student id is empty or null
+df_final <- df_final %>% filter(student_id != "" |!is.na(student_id))
 
 df_final <- distinct(df_final)
+
+#Get frequency counts of country
+View(count(df_final, vars = country))
+
+
 nrow(df_final)
+
+#Fixing a few issues missed earlier
+df_final <- df_final %>% mutate(country = str_squish(str_replace_all(country, pattern = "cell|phone|Sister|Jose Lui", replacement = "")))
+
+glimpse(df_final)
+
+#Replacing all empty strings with NA
+df_final <- df_final %>% mutate_all(na_if, "")
+
+write.csv(df_final, "../Processed/additional-demographics.csv", row.names = FALSE)
+
+
+
 

@@ -46,15 +46,15 @@ for (file in files) {
  
    #Taking care of names in own row
    
-   length_pdf_text <- nrow(pdf_text) -1
+   length_pdf_text <- nrow(pdf_text) - 1
  
    
    #For each row, assuming the first row is fine
    for (i in 1:length_pdf_text) {
      
      #if the row doesn't start with a student id but previous one does
-     if ( !str_detect(pdf_text$data[i+1], pattern = "\\d\\d\\d\\d\\d\\d\\d+|SKIP") & 
-          str_detect(pdf_text$data[i], pattern = "\\d\\d\\d\\d\\d\\d\\d+")) {
+     if ( !str_detect(pdf_text$data[i+1], pattern = "\\d\\d\\d\\d\\d+|SKIP") & 
+          str_detect(pdf_text$data[i], pattern = "\\d\\d\\d\\d\\d+")) {
        
        #We take this data and add it to the previous row
        pdf_text$data[i] <- paste0(pdf_text$data[i], pdf_text$data[i+1])
@@ -70,7 +70,7 @@ for (file in files) {
    for (i in 2:length_pdf_text) { 
      
      if (str_detect(pdf_text$data[i], pattern = "SKIP") & 
-         str_detect(pdf_text$data[i+1], pattern = "^\\(\\d|^[:alpha:]")) {
+         str_detect(pdf_text$data[i+1], pattern = "^\\(\\d|^[:alpha:]|^\\d\\d ")) {
        
        #We do the same thing but skip the skip row
        pdf_text$data[i-1] <- paste(pdf_text$data[i-1], pdf_text$data[i+1])
@@ -139,14 +139,17 @@ for (file in files) {
     
     df_final <- bind_rows(df_final, df)
   }
+  
+  
 }
   
 
 df_final <- df_final %>% mutate(age = as.numeric(age), education_years = as.numeric(education_years))
 
-glimpse(df_final)
 
+df_final <- distinct(df_final)
 
+write.csv(df_final, "../Output/basic-demographics_2020-05-23.csv", row.names = FALSE)
 
 
   

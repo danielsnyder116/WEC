@@ -75,7 +75,7 @@ df_details <- df_details %>% mutate(DAYS=case_when( str_detect(class_name, patte
                                                     str_detect(class_name, pattern = "-W |-WK |-WKND") ~ "WKND",
                                                     str_detect(class_name, pattern = "MW") ~ "MW",
                                                     str_detect(class_name, pattern = "TTH") ~ "TTH",
-                                                    #Preserves pre-2105 days values
+                                                    #Preserves pre-2015 days values
                                                     TRUE ~ DAYS))
 
 #So 8.5% of classes don't have day info. in name ->->-> back to Proactive woooo
