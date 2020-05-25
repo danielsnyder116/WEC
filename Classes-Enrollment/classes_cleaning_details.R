@@ -1,7 +1,6 @@
 library(dplyr)
 library(stringr)
 library(tidyr)
-library(ggplot2)
 
 setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Totals_Transfers_Dropped")
 

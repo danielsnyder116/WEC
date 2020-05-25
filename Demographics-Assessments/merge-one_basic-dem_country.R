@@ -1,7 +1,7 @@
 library(dplyr)
 library(stringr)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Core-Demographics")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Demographics-Assessments/Core-Demographics")
 
 
 ##### Merges in the Country data with the other demographic data 

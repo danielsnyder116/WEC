@@ -2,28 +2,30 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Finance-Payments/")
 
 #Bringing in Payment Method Data
-df_final < read.csv("Database/2000-2020_payment-methods.csv", row.names=FALSE)
+df_method <- read.csv("Payment Methods/2000-2020_payment-methods.csv", stringsAsFactors = FALSE)
 
 
 #Bringing in previous financial information to create more complete data set
-df_finance <- read.csv("../Database/Archive/2000-2020-01-15_financial-data.csv", stringsAsFactors = FALSE,
-                       encoding = 'UTF-8')
+df_finance <- read.csv("Finance/Output/2000-2020-01-15_financial-data.csv", stringsAsFactors = FALSE, encoding = 'UTF-8')
 
 
 #Ensuring data types match
-df_final <- df_final %>% mutate(year=as.integer(year),month=as.character(month), day=as.character(day))
-df_finance <- df_finance %>% mutate(student_id = as.character(student_id))
+df_method <- df_method %>% mutate(year=as.integer(year), 
+                                month=as.character(month), 
+                                day=as.character(day),
+                                student_id = as.character(student_id))
+
 
 #Confirming matching data types
 glimpse(df_finance)
-glimpse(df_final)
+glimpse(df_method)
 
 
 #Not using names as there are issues with double last names when cleaning up the long string
-df_combined <- full_join(df_finance, df_final, by=c("student_id","year", "month", "day"))
+df_combined <- full_join(df_finance, df_method, by=c("student_id","year", "month", "day"))
 
 #Getting rid of .y names since they had more issues
 df_combined <- df_combined %>% select(-c(last_name.y, first_name.y))
@@ -43,11 +45,11 @@ df_combined <- df_combined %>% filter(!is.na(last_name))
 
 nrow(df_combined)
 
-534 / 54508
+534 / 54507
 
-count(df_combined, vars=pmt_method)
+View(count(df_combined, vars=pmt_method))
 
 
-write.csv(df_combined, "Database/2000-2020_COMPLETE_financial-data_with-payment-method.csv", row.names=FALSE)
+write.csv(df_combined, "final_financial-data-with-payment-method_2000-2020.csv", row.names=FALSE)
 
 

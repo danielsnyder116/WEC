@@ -6,9 +6,9 @@ library(tibble)
 library(tidyr)
 library(lubridate)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Payment Methods")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Payment Methods")
 
-file <- list.files()
+file <- list.files(pattern = "*.pdf")
 
 #Gets all the text as one long string - best option
 pdf_text <- extract_text(file, encoding="UTF-8")
@@ -118,5 +118,5 @@ df_final <- df_final %>% mutate(year=year(df_final$date),
 df_final <- df_final %>% select(student_id,last_name,first_name,
                                 pmt_method, year, month, day)
 
-write.csv(df_final, "../Database/2000-2020_payment-methods.csv", row.names=FALSE)
+write.csv(df_final, "2000-2020_payment-methods.csv", row.names=FALSE)
 

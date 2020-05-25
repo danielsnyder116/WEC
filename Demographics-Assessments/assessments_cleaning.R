@@ -1,10 +1,10 @@
 library(stringr)
 library(dplyr)
 library(tidyr)
-library(readr)
-library(ggplot2)
+#library(readr)
+#library(ggplot2)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Education-Impact/Data/Processed")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Demographics-Assessments/Assessments/Processed")
 
 df <- read.csv("2015-2019_intermediate_educational-performance-data.csv", stringsAsFactors = FALSE)
 
@@ -22,6 +22,7 @@ df <- df %>% separate(student_name, c("last_name", "first_name"), sep=",")
 #Semester
 df <- df %>% mutate(semester = str_replace_all(semester, pattern="Semester: ", ""))
 df <- df %>% separate(semester, c("semester", "year"), sep=" ", extra="merge")
+df <- df %>% mutate(semester = str_to_upper(semester))
 
 #Class Name
 df <- df %>% mutate(class_name = str_replace_all(class_name, pattern="Class Name: ", replacement = ""))
@@ -49,7 +50,7 @@ df$exam_points <- df$total_eval_score - (df$attendance + df$participation + df$l
 df <- df %>% select(student_id, last_name, first_name, semester, year, class_name, final_exam_score,
                     exam_points, attendance, participation, language_score, total_eval_score)
 
-glimpse(df)
+
 
 #Adding "2017 2" and "2018 2" data to 2017 and 2018 respectively
 #They were just special classes held for different training during same semester
@@ -58,6 +59,11 @@ df <- df %>% mutate(year = str_trunc(year, width=4, ellipsis = ""))
 
 #Getting rid of a few rows of 90% NA data and thus unusable
 df <- df %>% filter(!is.na(year))
+
+#Getting rid of extra spaces
+df <- df %>% mutate_all(str_squish)
+
+glimpse(df)
 
 
 write.csv(df, "../Output/2015-2019_student-assessments.csv", row.names = FALSE)

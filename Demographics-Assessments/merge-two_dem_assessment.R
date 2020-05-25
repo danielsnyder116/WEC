@@ -1,35 +1,24 @@
 library(dplyr)
 library(stringr)
-library(tidyr)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Database/Archive")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Students/Demographics-Assessments")
 
 
-df_demographics <- read.csv("OLD_2000-2019_student-demographics.csv", stringsAsFactors = FALSE)
-df_assessment <- read.csv("OLD_2015-2019_student-assessments.csv", stringsAsFactors = FALSE)
+df_dem <- read.csv("Core-Demographics/final-demographics_2020-05-23.csv", stringsAsFactors = FALSE)
+df_assess <- read.csv("Assessments/Output/2015-2019_student-assessments.csv", stringsAsFactors = FALSE)
+
 
 
 ################ DEMOGRAPHIC/ASSESSMENT DATA ################ 
-glimpse(df_demographics)
-glimpse(df_assessment)
+glimpse(df_dem)
+glimpse(df_assess)
 
-#Some minor processing that I missed in previous work - will help with merges
-df_demographics <- df_demographics %>% mutate(last_name = str_squish(last_name),
-                                              first_name = str_squish(first_name))
-
-#Just gonna get rid of the child under 22 column, all "No"
-count(df_demographics, vars=child_under_22)
-df_demographics <- df_demographics %>% select(-child_under_22)
-
-df_demographics <- df_demographics %>% mutate(employment_status=na_if(employment_status, ""),
-                                              ethnicity=na_if(ethnicity, ""))
-
-df_assessment <- df_assessment %>% mutate(last_name = str_squish(last_name),
-                                          first_name = str_squish(first_name))
 
 #Doing a full join works
-df_student <- full_join(df_demographics, df_assessment, by=c("student_id", "semester", "year",
-                                                          "last_name", "first_name"))
+df_student <- full_join(df_dem, df_assess, by=c("student_id", "semester", "year", "class_name"))
+
+#No need for last name or first name from df_assess
+df_student <- df_student %>% select(-last_name,-first_name )
 
 nrow(df_student)
 nrow(distinct(df_student))
@@ -38,7 +27,7 @@ nrow(distinct(df_student))
 df_student <- distinct(df_student)
 
 
-write.csv(df_student, "2000-2019_student-demographics-and-assessment-data.csv", row.names=FALSE)
+write.csv(df_student, "final_demographics-and-assessment-data.csv", row.names=FALSE)
 
 
 ########## EXTRA CODE ##########

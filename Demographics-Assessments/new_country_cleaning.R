@@ -2,7 +2,7 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 
-setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Country-of-Origin/Processed")
+setwd("C:/Users/602770/downloads/volunteer/wec/Students/Demographics-Assessments/Core-Demographics/Country-of-Origin/Processed")
 
 df <- read.csv("additional-demographics.csv", stringsAsFactors = FALSE)
 
@@ -69,10 +69,31 @@ nrow(df)
 #Only 34 NA for class_name out of 43769 yesss!
 nrow(df %>% filter(is.na(class_name)))
 
+nrow(df)
+
+#Getting rid of rows with invalid class names
+df <- df %>% filter(!str_detect(class_name, pattern = "Books"))
+
+#Fix a couple of class_names that are 6:00 AM rather than 6AM
+df <- df %>% mutate(class_name = str_remove_all(class_name, pattern = "[:punct:]00"))
+
+
+#Manually Fix 432817319	La Rosa, Lucy Uruguay and 846699342	Muñoz, Emilia El Salvador
+df[14667, "name"] <- "La Rosa, Lucy"
+df[14667, "country"] <- "Uruguay"
+
+df[31211, "name"] <- "Muñoz, Emilia"
+df[31211, "country"] <- "El Salvador"
+
+write.csv(df, "../Output/additional-demographics_2020-05-23.csv", row.names = FALSE)
+
+
+
+
+
+
 
 #The NAs are truly NAs in Proactive - can figure it out at times by language but not worth the time
-
-
 
 # #Filling in Data
 # df <- df %>% mutate(country = case_when(str_detect(student_id, pattern = "2086850607") ~ "El Salvador",
@@ -90,9 +111,6 @@ nrow(df %>% filter(is.na(class_name)))
 #                                         str_detect(student_id, pattern = "") ~ "",
 #                                         str_detect(student_id, pattern = "") ~ "",
 #                                         TRUE ~ country))
-
-
-write.csv(df, "../Output/additional-demographics_2020-05-23.csv", row.names = FALSE)
 
 
 

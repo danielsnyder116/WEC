@@ -99,7 +99,7 @@ df_final <- distinct(df_final)
 df_final <- arrange(df_final, desc(year))
 
 
-write.csv(df_final, "../../Database/2000-2019_student-numbers_includes-dropped-transferred.csv", row.names=FALSE)
+write.csv(df_final, "../Processed/2000-2019_student-numbers_includes-dropped-transferred.csv", row.names=FALSE)
 
 
 ##### OLD YUCKY CODE - CODING IS A PROCESS, NEVER FORGET #BIRD BY BIRD #####

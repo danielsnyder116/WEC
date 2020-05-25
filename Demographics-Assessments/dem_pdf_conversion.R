@@ -6,7 +6,7 @@ library(tidyr)
 
 # IMPROVED VERSION OF STUDENT DEMOGRAPHIC DATA, now that I know how extract data better # 
 
-setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Basics/Raw")
+setwd("C:/Users/602770/downloads/volunteer/wec/Students/Demographics-Assessments/Core-Demographics/Basics/Raw")
 
 files <- list.files(pattern="*.pdf")
 
@@ -146,7 +146,7 @@ for (file in files) {
 
 df_final <- df_final %>% mutate(age = as.numeric(age), education_years = as.numeric(education_years))
 
-df_final <- df_final %>% mutate_al(na_if, "")
+df_final <- df_final %>% mutate_all(na_if, "")
 
 df_final <- distinct(df_final)
 
