@@ -146,6 +146,7 @@ for (file in files) {
 
 df_final <- df_final %>% mutate(age = as.numeric(age), education_years = as.numeric(education_years))
 
+df_final <- df_final %>% mutate_al(na_if, "")
 
 df_final <- distinct(df_final)
 

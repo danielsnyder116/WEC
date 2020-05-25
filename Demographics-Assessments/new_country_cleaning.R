@@ -6,7 +6,24 @@ setwd("C:/Users/602770/downloads/volunteer/wec/Students/Core-Demographics/Countr
 
 df <- read.csv("additional-demographics.csv", stringsAsFactors = FALSE)
 
+#Getting rid of one NA row that somehow snuck in...more grr!
+df <- df %>% slice(-14676)
+
+glimpse(df)
+
 #View(count(df, vars=country))
+
+#Dealing with Congo issue not solved in previous code grrr
+for (i in 1:nrow(df)) {
+  
+  if (str_detect(df$name[i], pattern = "Congo")) {
+    
+    df$country[i] <- "Democratic Republic of the Congo"
+    df$name[i] <- str_replace(df$name[i], pattern = "Congo, The Democratic Republic Of The Formerly Zaire", "")
+    
+  }
+  
+}
 
 #Cleaning up some country names - add extra | to ensure the spaces are not included in evaluating each pattern element
 df <- df %>% mutate(country = str_replace_all(country, pattern = "\\, United Republic Of|
@@ -21,17 +38,19 @@ df <- df %>% mutate(country = str_replace_all(country, pattern = "\\, United Rep
 #To help with cleaning
 df <- df %>% mutate(country = str_pad(country, 6, side = "right", pad = " "))
 
+View(count(df, vars=country))
+
 df <- df %>% mutate(country = case_when(str_detect(country, pattern = "Viet Nam") ~ "Vietnam",
-                                    str_detect(country, pattern = "Burma No Longer Exists") ~ "Myanmar",
+                                    str_detect(country, pattern = "Burma") ~ "Myanmar",
                                     str_detect(country, pattern = "Congo\\, The Democratic Republic Of") ~ "Democratic Republic of the Congo",
                                     str_detect(country, pattern = "Congo") ~ "Republic of the Congo",
-                                    str_detect(country, pattern = "Côte D\\'ivoire") ~ "Côte D'Ivoire",
+                                    str_detect(country, pattern = "Côte D'ivoire") ~ "Côte D'Ivoire",
                                     str_detect(country, pattern = "Czech Republic") ~ "Czechia",
-                                    str_detect(country, pattern = "German Democratic Republic No Longer Exists") ~ "Germany",
+                                    str_detect(country, pattern = "German Democratic Republic") ~ "Germany",
                                     str_detect(country, pattern = "GuineaBissau") ~ "Guinea-Bissau",
-                                    str_detect(country, pattern = "Korea\\, Democratic People's Republic Of") ~ "North Korea",
+                                    str_detect(country, pattern = "Korea\\, Democratic People[:punct:]s Republic Of") ~ "North Korea",
                                     str_detect(country, pattern = "Korea ") ~ "South Korea",
-                                    str_detect(country, pattern = "Lao People\\'s Democratic Republic") ~ "Laos",
+                                    str_detect(country, pattern = "Lao People[:punct:]s Democratic Republic") ~ "Laos",
                                     str_detect(country, pattern = "Macedonia") ~ "North Macedonia",
                                     str_detect(country, pattern = "Unknown Or Unspecified Country") ~ NA_character_,
                                     TRUE ~ country))
@@ -41,11 +60,11 @@ df <- df %>% mutate_all(str_squish)
 #Checking our results
 View(count(df, vars=country))
 
-#768 NA or 1.7% missing - nice
+#759 NA or 1.7% missing - nice
 nrow(df %>% filter(is.na(country)))
 nrow(df)
 
-768 / 43769
+759 / 43769
 
 #Only 34 NA for class_name out of 43769 yesss!
 nrow(df %>% filter(is.na(class_name)))

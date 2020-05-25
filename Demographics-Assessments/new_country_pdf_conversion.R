@@ -140,6 +140,8 @@ for (file in files) {
    }
  }
  
+ 
+ 
   #Clean Country Column
   df <- df %>% mutate(country = str_squish(str_remove_all(country, pattern = "^ |^  |\\-")))
   
@@ -187,13 +189,19 @@ nrow(df_final)
 #Fixing a few issues missed earlier
 df_final <- df_final %>% mutate(country = str_squish(str_replace_all(country, pattern = "cell|phone|Sister|Jose Lui", replacement = "")))
 
-glimpse(df_final)
 
 #Replacing all empty strings with NA
 df_final <- df_final %>% mutate_all(na_if, "")
 
+df_final <- df_final %>% mutate_all(str_squish)
+
+glimpse(df_final)
+
 write.csv(df_final, "../Processed/additional-demographics.csv", row.names = FALSE)
 
+#For some reason the country loop doesn't take care of cases with the Congo in the name column
+#Not sure why, even went through step by step, but not worth the time for now. 
 
 
+#str_detect(df_final[22243, "name"], regex(paste0(" ","Congo, The Democratic Republic Of The Formerly Zaire", "$")))
 
