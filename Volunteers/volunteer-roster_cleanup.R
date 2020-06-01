@@ -6,15 +6,19 @@ library(purrr)
 
 setwd("/Users/Daniel/Desktop/volunteer-files/")
 
-files <- list.files(pattern = "*.xls*", recursive=TRUE)
+#Reading in files and standardizing capitalization
+files <- str_to_upper(list.files(pattern = "*.xls*", recursive=TRUE))
 
 #We are filtering out the workbooks that are not of use to us
-roster_files <- str_subset(files, pattern = "List|Log|Potential|Show|Sign|sign|Training|Tutor|Tutoring", negate = TRUE)
+roster_files <- str_subset(files, pattern = "AUTOSAVED|BOOK|CANDIDATES|COPY|DO NOT USE|EMAIL|LIST|LOG|OLD|
+                                             |POTENTIAL|RETURNING|SHOW|SIGN|SUB|TECH|
+                                             |TRAINING|TUTOR|\\~|\\(1\\)", negate = TRUE)
+
 #str_subset is a wrapper around files[str_detect(files, pattern = "Log")]
 
 #This also works#Keep takes in list and a function to apply as a filter
-#roster_files <- files %>% keep(., str_detect(files, pattern = "List|Log|Potential|Show|Sign|sign|Training|Tutor", negate = TRUE))
-
+#roster_files <- files %>% keep(., str_detect(files, pattern = "List|Log|
+                                    #|Potential|Show|Sign|sign|Training|Tutor", negate = TRUE))
 
 for (roster in roster_files) {
 
@@ -39,29 +43,42 @@ for (roster in roster_files) {
   #This will allow for easier and cleaner binding
   colnames(raw) <- paste0("col", seq(ncol(raw)))
 
-    
-  #Adding in semester and year data
-  semester_year <- unlist(str_split(roster, pattern = "\\/"))[2]
-  file_semester <- str_extract(semester_year, pattern = "Fall|Winter|Spring|Summer")
+  #Adding in semester and year data - need other patterns due to variation in naming
+  semester_year <- str_extract(roster, pattern = "FALL \\d\\d\\d\\d|WINTER \\d\\d\\d\\d|
+                                                |SUMMER \\d\\d\\d\\d|SPRING \\d\\d\\d\\d|
+                                                |\\d\\d\\d\\d FALL|\\d\\d\\d\\d WINTER|
+                                                |\\d\\d\\d\\d SUMMER|\\d\\d\\d\\d SPRING")
+  
+  file_semester <- str_extract(semester_year, pattern = "FALL|WINTER|SPRING|SUMMER")
   file_year <- str_extract(semester_year, pattern = "\\d\\d\\d\\d")
     
-  raw <- raw %>% mutate(semester = str_to_upper(file_semester),
-                          year = str_to_upper(file_year))
+  raw <- raw %>% mutate(semester = file_semester, year = file_year)
+  
+  #print(paste0(roster, "\n:", file_semester, " ", file_year))
+  
+  #print(paste0(roster, "\n", head(raw)))
   
   }
    
    #Putting everything together
-   if (str_detect(roster, pattern = "Fall 2006")) {
-     
+   if (str_detect(roster, pattern = "FALL 06 TEACHERS EVENINGS")) {
      df <- raw
      
    } else {
-     
      df <- bind_rows(df, raw)
    }
    
     
 }
+
+
+# glimpse(df)
+# 
+# unique(df$col1)
+
+
+
+
 
 
 ## CODE GRAVEYARD ##
