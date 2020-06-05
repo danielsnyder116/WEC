@@ -30,6 +30,7 @@ for (roster in roster_files) {
                     map(function (x) read_excel(path = roster, skip = 1, col_types = "text")) %>% 
                     bind_rows() %>% compact()
   
+  #Skips empty workbook cases
   if (nrow(raw) == 0) {
     
   } else {
@@ -71,6 +72,42 @@ for (roster in roster_files) {
     
 }
 
+#Alrighty, now it's cleanin' time
+#Using new dplyr verb across to filter specific columns that are not na
+#Getting rid of rows that are all NAs
+
+nrow(df)
+df <- df %>% filter(across(col1:col3, ~!is.na(.)))
+
+nrow(df)
+
+#Getting rid of data where it is just a list of volunteer emails or other irrelevant text
+col1_contents <- unique(df$col1)
+
+nrow(df)
+#Getting rid of spaces
+#df <- df %>% mutate(col1 = str_to_upper(str_remove_all(col1, " ")))
+
+#Getting rid of punctuation
+df <- df %>% mutate(col1 = str_squish(str_remove_all(col1, pattern = "^[:punct:]")))
+
+#Replacing empty col1 with NA separate from rest of editing
+df <- df %>% mutate(col1 = na_if(col1, ""))
+
+#We replace irrelevant values with NA to make it easier to fill in info.
+
+#Need to figure this out
+#For certain
+
+df <- df %>% filter(str_replace_all(col1, pattern = "Level|Their|Emailed|Emld|Will be|Sent|\\d\\d\\d+|must|
+                                    |Room|Syllabus|Jaw|Mich|Elis|Andr|Lori|of|Moc|winter|Charles|Sula|
+                                    |Erin|Jess|Camer|Elsa|Brain|workbook|shares|Satur|April|12|No class|
+                                    |https|WHITE|Summer|Preston|Monday|Georgetown|Bob|\\||Name|Aileen|
+                                    |Ina|11AM|9|2\\-4PM"),
+                                     replacement = NA_character_)
+starts
+
+nrow(df)
 
 # glimpse(df)
 # 
