@@ -3,15 +3,19 @@ library(stringr)
 library(glue)
 library(readxl)
 library(purrr)
+library(tidyr)
 
 setwd("/Users/Daniel/Desktop/volunteer-files/")
 
 #Reading in files and standardizing capitalization
 files <- str_to_upper(list.files(pattern = "*.xls*", recursive=TRUE))
 
+## This code focuses on CORE, SCHEDULED TEACHER ROSTERS
+## Other code will look at subs, tutors, etc.
+
 #We are filtering out the workbooks that are not of use to us
 roster_files <- str_subset(files, pattern = "AUTOSAVED|BOOK|CANDIDATES|COPY|DO NOT USE|EMAIL|LIST|LOG|OLD|
-                                             |POTENTIAL|RETURNING|SHOW|SIGN|SUB|TECH|
+                                             |POTENTIAL|RETURNING|SHOW|SIGN|SUB|TECH|RETURNING|
                                              |TRAINING|TUTOR|\\~|\\(1\\)", negate = TRUE)
 
 #str_subset is a wrapper around files[str_detect(files, pattern = "Log")]
@@ -25,8 +29,16 @@ for (roster in roster_files) {
   #Better way is to simply combine sheets to avoid messy workbook issues
   #Need to use "function (x)" to be able to set parameters of read_excel
   #Doing this makes it unnecessary to put "path = roster" for the second argument of map()
+  #We also want to filter out unnecessary sheets 
+  
   print(roster)
-  raw <- roster %>% excel_sheets() %>% set_names() %>%
+  #print(roster %>% excel_sheets())
+  
+  raw <- roster %>% excel_sheets() %>% as.data.frame(.) %>% 
+                    filter(., !str_detect(., pattern = "New|NEW|new|Retention|Gala|Email|applicants|All Vol|
+                                                |Outreach|To Contact|VOAs|Waiting|Tutors|TUTORS|Job|DO NOT||
+                                                |External|Subs|Office|Using|Deloitte|Cars|Owed|Return|St Mary|
+                                                |Teacher|Salsa|Potential|Help|Lesson|Candidates|Teams" )) %>%
                     map(function (x) read_excel(path = roster, skip = 1, col_types = "text")) %>% 
                     bind_rows() %>% compact()
   
@@ -35,7 +47,6 @@ for (roster in roster_files) {
     
   } else {
     
-  
   #Due to poor file names need to add in some logic to ensure files are uniform in column
   #names to ensure easy binding later
  
@@ -54,11 +65,7 @@ for (roster in roster_files) {
   file_year <- str_extract(semester_year, pattern = "\\d\\d\\d\\d")
     
   raw <- raw %>% mutate(semester = file_semester, year = file_year)
-  
-  #print(paste0(roster, "\n:", file_semester, " ", file_year))
-  
-  #print(paste0(roster, "\n", head(raw)))
-  
+
   }
    
    #Putting everything together
@@ -69,56 +76,93 @@ for (roster in roster_files) {
      df <- bind_rows(df, raw)
    }
    
-    
 }
 
-#Alrighty, now it's cleanin' time
-#Using new dplyr verb across to filter specific columns that are not na
-#Getting rid of rows that are all NAs
+#Getting rid of rows of all NA or "solo" rows - doing together causes issues
+df <- df %>% filter(!is.na(col3))
+df <- df %>% filter(!str_detect(col3, pattern = "Solo|solo"))
 
 nrow(df)
-df <- df %>% filter(across(col1:col3, ~!is.na(.)))
 
-nrow(df)
+#Dropping duplicate rows
+df <- distinct(df)
 
 #Getting rid of data where it is just a list of volunteer emails or other irrelevant text
 col1_contents <- unique(df$col1)
 
 nrow(df)
-#Getting rid of spaces
-#df <- df %>% mutate(col1 = str_to_upper(str_remove_all(col1, " ")))
 
-#Getting rid of punctuation
-df <- df %>% mutate(col1 = str_squish(str_remove_all(col1, pattern = "^[:punct:]")))
+#Temporarily replace NAs with string to be able to use str_detect to get rid of junk text
+df <- df %>% mutate(col1 = replace_na(col1, "NA"))
 
-#Replacing empty col1 with NA separate from rest of editing
-df <- df %>% mutate(col1 = na_if(col1, ""))
+#Clearing first column to make data tidyr in terms of class data
+#Couldn't figure out a tidy way of doing this so using for loop for now..
+for (i in 1:nrow(df)) {
 
-#We replace irrelevant values with NA to make it easier to fill in info.
+  if (str_detect(df$col1[i], pattern = "Disc|disc|Their|Emailed|Emld|Will be|Sent|sent|\\d\\d\\d+|must|Room|Syllabus|
+                                      |of|winter|Brain|workbook|Workbook|shares|April|12|No class|https|WHITE|Summer|
+                                      |Monday|Georgetown|Name|11AM|9|4PM|25|returns|Wrote|Thank|UPDATE|update|Tue\\/|
+                                      |Saturday 11|Bob|Fall|Sat 10|amsolomo|Angelina|Anne|Nichelle|Ellen Cam|
+                                      |Shares with|New|Fillers")) {
+    df$col1[i] <- NA_character_
+  }
+}
 
-#Need to figure this out
-#For certain
+#Reverting back to all NA_character_
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "NA", replacement = NA_character_))
 
-df <- df %>% filter(str_replace_all(col1, pattern = "Level|Their|Emailed|Emld|Will be|Sent|\\d\\d\\d+|must|
-                                    |Room|Syllabus|Jaw|Mich|Elis|Andr|Lori|of|Moc|winter|Charles|Sula|
-                                    |Erin|Jess|Camer|Elsa|Brain|workbook|shares|Satur|April|12|No class|
-                                    |https|WHITE|Summer|Preston|Monday|Georgetown|Bob|\\||Name|Aileen|
-                                    |Ina|11AM|9|2\\-4PM"),
-                                     replacement = NA_character_)
-starts
+#Filling in class names  and day of week to make data tidy
+df <- df %>% fill(c(col1, col2), .direction = "down")
 
-nrow(df)
+#### Now it's time to get rid of rows that aren't relevant ####
 
-# glimpse(df)
-# 
-# unique(df$col1)
+#Dropping rows that are column headers without information or extra info.
+df <- df %>% filter(!str_detect(col1, pattern = "Level\\/|Jaw|Mich|Elis|Andr|Lori|Charles|Sula|Erin|Jess|Camer|Elsa|
+                                |Bob|Aileen|Ina|Moc|Preston|Name|Sat|Sun|COPY|Reserves|RESERVES|
+                                |Conference|Did Orientation|Need to Email|Could be |Chuck|Tutor|tutor|
+                                |Wilson|Katie|Rachelle|TH|M or|Drop|TBD|Permanent|withdrew|term began|Sub|
+                                |College Park|izzy|Returning"))
 
-
-
+#Need to finish going through col1_contents to either replace with NA to improve filling in or 
+# to delete row after filling in process. Almost there!!!
 
 
 
 ## CODE GRAVEYARD ##
+
+#Alrighty, now it's cleanin' time
+#Using new dplyr verb across to filter specific columns that are not na
+#Getting rid of rows that are all NAs
+#df <- df %>% filter(across(col1:col3, ~!is.na(.)))
+
+# #Dang it couldn't get it 
+# df %>% mutate(across(col1, starts_with("Em")))
+# View(df %>% mutate(across(col1, ~na_if(., "must offer for|Their"))))
+# df %>% filter(across(col1, starts_with("Level"), ~na_if(.)))
+# 
+# df %>% mutate(col1 = across(col1, str_detect(., pattern = "^[:punct:]|Level|Their|Emailed|Emld|
+#                                     |Will be|Sent|\\d\\d\\d+|must||Room|Syllabus|Jaw|Mich|Elis|Andr|Lori|
+#                                     |of|Moc|winter|Charles|Sula||Erin|Jess|Camer|Elsa|Brain|workbook|
+#                                     |shares|Satur|April|12|No class|https|WHITE|Summer|Preston|Monday|
+#                                     |Georgetown|Bob|Name|Aileen|Ina|11AM|9|4PM"), ~na_if(.)))
+# 
+# df <- df %>% mutate(col1 = na_if(col1, "^[:punct:]|"))
+# 
+# #We replace irrelevant values with NA to make it easier to fill in info.
+# df <- df %>% mutate(col1 = na_if(col1, str_detect(col1, pattern = "^[:punct:]|Level|Their|Emailed|Emld|
+#                                     |Will be|Sent|\\d\\d\\d+|must||Room|Syllabus|Jaw|Mich|Elis|Andr|Lori|
+#                                     |of|Moc|winter|Charles|Sula||Erin|Jess|Camer|Elsa|Brain|workbook|
+#                                     |shares|Satur|April|12|No class|https|WHITE|Summer|Preston|Monday|
+#                                     |Georgetown|Bob|Name|Aileen|Ina|11AM|9|4PM")))
+# 
+# 
+# 
+# #Need to figure this out
+# #For certain
+# 
+# df <- df %>% filter(str_replace_all(col1, pattern = ""),
+#                     replacement = NA_character_)
+
 
 #Anonymous/lambda function version
 #colnames(raw) <- map(y, function(x) paste0("col", y))
