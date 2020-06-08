@@ -103,7 +103,7 @@ for (i in 1:nrow(df)) {
                                       |of|winter|Brain|workbook|Workbook|shares|April|12|No class|https|WHITE|Summer|
                                       |Monday|Georgetown|Name|11AM|9|4PM|25|returns|Wrote|Thank|UPDATE|update|Tue\\/|
                                       |Saturday 11|Bob|Fall|Sat 10|amsolomo|Angelina|Anne|Nichelle|Ellen Cam|
-                                      |Shares with|New|Fillers")) {
+                                      |Shares with|New|Fillers|for 4B")) {
     df$col1[i] <- NA_character_
   }
 }
@@ -118,10 +118,14 @@ df <- df %>% fill(c(col1, col2), .direction = "down")
 
 #Dropping rows that are column headers without information or extra info.
 df <- df %>% filter(!str_detect(col1, pattern = "Level\\/|Jaw|Mich|Elis|Andr|Lori|Charles|Sula|Erin|Jess|Camer|Elsa|
-                                |Bob|Aileen|Ina|Moc|Preston|Name|Sat|Sun|COPY|Reserves|RESERVES|
+                                |Bob|Aileen|Ina|Moc|Preston|Name|Sat|Sun|COPY|Reserve|RESERVE|
                                 |Conference|Did Orientation|Need to Email|Could be |Chuck|Tutor|tutor|
                                 |Wilson|Katie|Rachelle|TH|M or|Drop|TBD|Permanent|withdrew|term began|Sub|
-                                |College Park|izzy|Returning"))
+                                |College Park|izzy|Returning|Rebecca Stewart|Lauren Mai|Meewa"))
+
+#Potentially shift over some of the rows with people names - possibly just column issue and not mistake
+
+df <- df %>% mutate(col1 = str_remove(col1, pattern = "now |1A\\-II \\(NOW |was 2A\\-II"))
 
 #Need to finish going through col1_contents to either replace with NA to improve filling in or 
 # to delete row after filling in process. Almost there!!!
