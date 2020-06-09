@@ -34,6 +34,7 @@ for (roster in roster_files) {
   print(roster)
   #print(roster %>% excel_sheets())
   
+  #Can also just use str_subset again but converting to dataframe is another valid method
   raw <- roster %>% excel_sheets() %>% as.data.frame(.) %>% 
                     filter(., !str_detect(., pattern = "New|NEW|new|Retention|Gala|Email|applicants|All Vol|
                                                 |Outreach|To Contact|VOAs|Waiting|Tutors|TUTORS|Job|DO NOT||
@@ -78,17 +79,30 @@ for (roster in roster_files) {
    
 }
 
+#Sorting dataframe by semester and year
+#First need to make semester a factored variable
+#This is MAGICAL
+df <- df %>% mutate(semester = factor(semester, levels = c("WINTER", "SPRING", "SUMMER", "FALL")))
+df <- arrange(df, year, semester)
+
 #Getting rid of rows of all NA or "solo" rows - doing together causes issues
 df <- df %>% filter(!is.na(col3))
 df <- df %>% filter(!str_detect(col3, pattern = "Solo|solo"))
 
-nrow(df)
-
 #Dropping duplicate rows
 df <- distinct(df)
 
-#Getting rid of data where it is just a list of volunteer emails or other irrelevant text
-col1_contents <- unique(df$col1)
+#Fixing cases where was one class and changed to avoid confusion
+df <- df %>% mutate(col1 = str_remove_all(col1, pattern = "now |1A\\-II \\(NOW |was 2A\\-II|[:punct:]"))
+
+#Replacing blank strings with NA
+df <- df %>% mutate(col1 = na_if(col1, ""))
+
+#Some manual adding ins
+df[3686:3687, "col1"] <- c(rep("Conversation Group at Shaw Library",2))
+
+#Get rid of reserve contacts
+df <- df %>% slice(-3688:-3753)
 
 nrow(df)
 
@@ -116,19 +130,29 @@ df <- df %>% fill(c(col1, col2), .direction = "down")
 
 #### Now it's time to get rid of rows that aren't relevant ####
 
-#Dropping rows that are column headers without information or extra info.
-df <- df %>% filter(!str_detect(col1, pattern = "Level\\/|Jaw|Mich|Elis|Andr|Lori|Charles|Sula|Erin|Jess|Camer|Elsa|
-                                |Bob|Aileen|Ina|Moc|Preston|Name|Sat|Sun|COPY|Reserve|RESERVE|
+#Dropping rows that are column headers or tutor/sub info. (treated separately)
+df <- df %>% filter(!str_detect(col1, pattern = "LevelSection|Section|Jaw|Mich|Elis|Andr|Lori|Charles|Sula|Erin|Jess|
+                                |Camer|Elsa|Bob|Aileen|Ina|Moc|Preston|Name|Sat|Sun|COPY|Reserve|RESERVE|
                                 |Conference|Did Orientation|Need to Email|Could be |Chuck|Tutor|tutor|
                                 |Wilson|Katie|Rachelle|TH|M or|Drop|TBD|Permanent|withdrew|term began|Sub|
-                                |College Park|izzy|Returning|Rebecca Stewart|Lauren Mai|Meewa"))
+                                |College Park|izzy|Returning|Rebecca Stewart|Lauren Mai|Meewa|Tonisha|
+                                |Marcela|Donna|Alex|Hallie|Waiting|Additional"))
 
-#Potentially shift over some of the rows with people names - possibly just column issue and not mistake
 
-df <- df %>% mutate(col1 = str_remove(col1, pattern = "now |1A\\-II \\(NOW |was 2A\\-II"))
 
-#Need to finish going through col1_contents to either replace with NA to improve filling in or 
-# to delete row after filling in process. Almost there!!!
+
+nrow(df)
+
+#Getting rid of data where it is just a list of volunteer emails or other irrelevant text
+col1_contents <- unique(df$col1)
+
+#Create column - first time volunteer binary
+#Use str_detect, if punctuation at very beginning of col3 (so *), add YES - to give idea of 
+#percentage new teacher vs returner
+
+
+#Now we need to consolidate the class names - maybe in another script
+
 
 
 
