@@ -107,23 +107,106 @@ df <- df %>% slice(-3688:-3753)
 nrow(df)
 
 #Temporarily replace NAs with string to be able to use str_detect to get rid of junk text
-df <- df %>% mutate(col1 = replace_na(col1, "NA"))
+df <- df %>% mutate(col1 = replace_na(col1, "NA"),
+                    col2 = replace_na(col2, "NA"))
+
+
+
+#col2 day/time
+
+#High, Beginner I / II
+#Advanced, Conversation
+#Conversation, Intermediate, High, Intermediate
+#Conversation, Low Advanced, Advanced I/II
+#Intro, Conversation
+#Beginning, Conversation
+#Intermediate/Advanced, Conversation I/II
+#Advanced, Conversation, Plus
+#Advanced, English in the, Workplace
+#Advanced, Workplace
+#Advanced, II
+#Advanced, Summit
+
+length_df <- nrow(df) - 1
+
+#### THREE PLUS ####
+#Case of class name being spread over 3 or 4 rows
+for (i in 1:length_df) {
+  
+  #Cases where name is spread over here lines and needs to be consolidated to one
+  if ( str_detect(df$col1[i], pattern = "Conversation|Advanced") &
+       str_detect(df$col1[i+1], pattern = "Conversation|English in the|Intermediate|Low Advanced") & 
+       str_detect(df$col1[i+2], pattern =  "Advanced I|Advanced II|High|Plus")
+  ) {
+    #We take this data and add it to the previous row
+    df$col1[i] <- paste0(df$col1[i], " ", df$col1[i+1], df$col1[i+2])
+    
+    #We then replace the data to make it easy to delete later. Deleting
+    # in the middle of the loop causes issues
+    df$col1[i+1] <- "SKIP"
+    df$col1[i+2] <- "SKIP"
+  }
+}
+
+##### TWO ####
+#Case of name spread over two rows
+for (i in 1:length_df) {
+  
+  #Cases where name is spread over two lines and needs to be consolidated to one
+  if ( str_detect(df$col1[i], pattern = "Intro|Beginning|Intermediate|Advanced|High") &
+       str_detect(df$col1[i+1], pattern = "Beginner I|Beginner II|Conversation I|Conversation II|
+                                           |Summit|Workplace|II") ) {
+    
+    #We take this data and add it to the previous row
+    df$col1[i] <- paste0(df$col1[i], " ", df$col1[i+1])
+    
+    #We then replace the data to make it easy to delete later. Deleting
+    # in the middle of the loop causes issues
+    df$col1[i+1] <- "SKIP"
+  }
+}
+
+#Get rid of SKIP columns and cases where name was in fourth row - only case is "Intermediate"
+df <- df %>% filter(!str_detect(col1, pattern = "SKIP|^Intermediate"))
+
+
+#Add conversation to #Intermediate/Advanced in col1 and 202/204 in col2
+#View(df %>% filter(str_detect(col2, pattern = "202|204")))
+
+for (i in 1:nrow(df)) {
+  
+  #Adds conversation to class names that are unclear
+  if (str_detect(df$col2[i], pattern = "202|204") & str_detect(df$col1[i], pattern = "Citizenship", negate = TRUE)) {
+    
+    df$col1[i] <- paste(df$col1[i], "Conversation")
+    
+  }
+}
 
 #Clearing first column to make data tidyr in terms of class data
-#Couldn't figure out a tidy way of doing this so using for loop for now..
+#Couldn't figure out a tidy way of doing this so using for loop for now...
 for (i in 1:nrow(df)) {
 
   if (str_detect(df$col1[i], pattern = "Disc|disc|Their|Emailed|Emld|Will be|Sent|sent|\\d\\d\\d+|must|Room|Syllabus|
                                       |of|winter|Brain|workbook|Workbook|shares|April|12|No class|https|WHITE|Summer|
                                       |Monday|Georgetown|Name|11AM|9|4PM|25|returns|Wrote|Thank|UPDATE|update|Tue\\/|
                                       |Saturday 11|Bob|Fall|Sat 10|amsolomo|Angelina|Anne|Nichelle|Ellen Cam|
-                                      |Shares with|New|Fillers|for 4B")) {
+                                      |Shares with|New|Fillers|for 4B|Could be|^izzy|^Summit|Weekday 67|TueThu 67|
+                                      |1A2A|2B3B|4AAdv|1A1B|2A3A|3BAdv|2B3A|3B4B")) {
     df$col1[i] <- NA_character_
   }
 }
 
+#write.csv(df, "test.csv", row.names = FALSE)
+
+#Manual deletion - necessary due to manual untidyness of data
+df <- df %>% slice(-2859:-2872,-4379:-4392,-4691:-4699,
+                   -4746:-4755,-4932:-4937,-5315, -5593:-5595)
+
 #Reverting back to all NA_character_
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "NA", replacement = NA_character_))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "NA", replacement = NA_character_),
+                    col2 = str_replace_all(col2, pattern = "NA", replacement = NA_character_))
+
 
 #Filling in class names  and day of week to make data tidy
 df <- df %>% fill(c(col1, col2), .direction = "down")
@@ -135,10 +218,8 @@ df <- df %>% filter(!str_detect(col1, pattern = "LevelSection|Section|Jaw|Mich|E
                                 |Camer|Elsa|Bob|Aileen|Ina|Moc|Preston|Name|Sat|Sun|COPY|Reserve|RESERVE|
                                 |Conference|Did Orientation|Need to Email|Could be |Chuck|Tutor|tutor|
                                 |Wilson|Katie|Rachelle|TH|M or|Drop|TBD|Permanent|withdrew|term began|Sub|
-                                |College Park|izzy|Returning|Rebecca Stewart|Lauren Mai|Meewa|Tonisha|
-                                |Marcela|Donna|Alex|Hallie|Waiting|Additional"))
-
-
+                                |College Park|Returning|Rebecca Stewart|Lauren Mai|Meewa|Tonisha|
+                                |Marcela|Donna|Alex|Hallie|Waiting|Additional|Waitlist|Other|SundayAM|Writing"))
 
 
 nrow(df)
