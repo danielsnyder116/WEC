@@ -166,8 +166,22 @@ for (i in 1:length_df) {
   }
 }
 
-#Get rid of SKIP columns and cases where name was in fourth row - only case is "Intermediate"
-df <- df %>% filter(!str_detect(col1, pattern = "SKIP|^Intermediate"))
+## Class Name CLEANUP
+
+df <- df %>% mutate(col1 = str_remove_all(col1, pattern = "1$|2$|3$|I$|II$|\\+"))
+
+#Add in extra space to differentiate between Intermediate and Intermediate Conv
+df <- df %>% mutate(col1 = str_pad(col1, width = 30, side = "right"))
+
+df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern ="^Intermediate  ") ~ "Intermediate Conversation",
+                                                str_detect(col1, pattern = "Conv ") ~ "Conversation",
+                                                str_detect(col1, pattern = "Grp") ~ "Group",
+                                                str_detect(col1, pattern = "Comp ") ~ "Computer ",
+                                                TRUE ~ col1)))
+
+
+#Get rid of SKIP columns
+df <- df %>% filter(!str_detect(col1, pattern = "SKIP"))
 
 
 #Add conversation to #Intermediate/Advanced in col1 and 202/204 in col2
@@ -176,7 +190,7 @@ df <- df %>% filter(!str_detect(col1, pattern = "SKIP|^Intermediate"))
 for (i in 1:nrow(df)) {
   
   #Adds conversation to class names that are unclear
-  if (str_detect(df$col2[i], pattern = "202|204") & str_detect(df$col1[i], pattern = "Citizenship", negate = TRUE)) {
+  if (str_detect(df$col2[i], pattern = "202|204") & str_detect(df$col1[i], pattern = "Citizenship|Conversation", negate = TRUE)) {
     
     df$col1[i] <- paste(df$col1[i], "Conversation")
     
@@ -200,8 +214,8 @@ for (i in 1:nrow(df)) {
 #write.csv(df, "test.csv", row.names = FALSE)
 
 #Manual deletion - necessary due to manual untidyness of data
-df <- df %>% slice(-2859:-2872,-4379:-4392,-4691:-4699,
-                   -4746:-4755,-4932:-4937,-5315, -5593:-5595)
+df <- df %>% slice(-2846:-2860,-4353:-4366,-4655:-4664,
+                   -4710:-4719,-4895:-4900)
 
 #Reverting back to all NA_character_
 df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "NA", replacement = NA_character_),
@@ -220,6 +234,8 @@ df <- df %>% filter(!str_detect(col1, pattern = "LevelSection|Section|Jaw|Mich|E
                                 |Wilson|Katie|Rachelle|TH|M or|Drop|TBD|Permanent|withdrew|term began|Sub|
                                 |College Park|Returning|Rebecca Stewart|Lauren Mai|Meewa|Tonisha|
                                 |Marcela|Donna|Alex|Hallie|Waiting|Additional|Waitlist|Other|SundayAM|Writing"))
+
+
 
 
 nrow(df)
