@@ -32,7 +32,7 @@ for (roster in roster_files) {
   #We also want to filter out unnecessary sheets 
   
   print(roster)
-  #print(roster %>% excel_sheets())
+  
   
   #Can also just use str_subset again but converting to dataframe is another valid method
   raw <- roster %>% excel_sheets() %>% as.data.frame(.) %>% 
@@ -42,6 +42,7 @@ for (roster in roster_files) {
                                                 |Teacher|Salsa|Potential|Help|Lesson|Candidates|Teams" )) %>%
                     map(function (x) read_excel(path = roster, skip = 1, col_types = "text")) %>% 
                     bind_rows() %>% compact()
+  
   
   #Skips empty workbook cases
   if (nrow(raw) == 0) {
@@ -82,8 +83,12 @@ for (roster in roster_files) {
 #Sorting dataframe by semester and year
 #First need to make semester a factored variable
 #This is MAGICAL
+glimpse(df)
+
 df <- df %>% mutate(semester = factor(semester, levels = c("WINTER", "SPRING", "SUMMER", "FALL")))
 df <- arrange(df, year, semester)
+
+df <- df %>% select(-col6)
 
 #Getting rid of rows of all NA or "solo" rows - doing together causes issues
 df <- df %>% filter(!is.na(col3))
@@ -111,9 +116,6 @@ df <- df %>% mutate(col1 = replace_na(col1, "NA"),
                     col2 = replace_na(col2, "NA"))
 
 
-
-#col2 day/time
-
 #High, Beginner I / II
 #Advanced, Conversation
 #Conversation, Intermediate, High, Intermediate
@@ -136,7 +138,7 @@ for (i in 1:length_df) {
   #Cases where name is spread over here lines and needs to be consolidated to one
   if ( str_detect(df$col1[i], pattern = "Conversation|Advanced") &
        str_detect(df$col1[i+1], pattern = "Conversation|English in the|Intermediate|Low Advanced") & 
-       str_detect(df$col1[i+2], pattern =  "Advanced I|Advanced II|High|Plus")
+       str_detect(df$col1[i+2], pattern =  "Advanced II|Advanced I|High|Plus|^II|^I")
   ) {
     #We take this data and add it to the previous row
     df$col1[i] <- paste0(df$col1[i], " ", df$col1[i+1], df$col1[i+2])
@@ -153,9 +155,9 @@ for (i in 1:length_df) {
 for (i in 1:length_df) {
   
   #Cases where name is spread over two lines and needs to be consolidated to one
-  if ( str_detect(df$col1[i], pattern = "Intro|Beginning|Intermediate|Advanced|High") &
-       str_detect(df$col1[i+1], pattern = "Beginner I|Beginner II|Conversation I|Conversation II|
-                                           |Summit|Workplace|II") ) {
+  if ( str_detect(df$col1[i], pattern = "Intro|Beginning|Intermediate|Advanced|High|English in the") &
+       str_detect(df$col1[i+1], pattern = "Beginner II|Beginner I|Conversation|Conversation II|Conversation I|
+                                           |Summit|Workplace|^II|^I|Plus") ) {
     
     #We take this data and add it to the previous row
     df$col1[i] <- paste0(df$col1[i], " ", df$col1[i+1])
@@ -166,18 +168,6 @@ for (i in 1:length_df) {
   }
 }
 
-## Class Name CLEANUP
-
-df <- df %>% mutate(col1 = str_remove_all(col1, pattern = "1$|2$|3$|I$|II$|\\+"))
-
-#Add in extra space to differentiate between Intermediate and Intermediate Conv
-df <- df %>% mutate(col1 = str_pad(col1, width = 30, side = "right"))
-
-df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern ="^Intermediate  ") ~ "Intermediate Conversation",
-                                                str_detect(col1, pattern = "Conv ") ~ "Conversation",
-                                                str_detect(col1, pattern = "Grp") ~ "Group",
-                                                str_detect(col1, pattern = "Comp ") ~ "Computer ",
-                                                TRUE ~ col1)))
 
 
 #Get rid of SKIP columns
@@ -222,8 +212,8 @@ df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "NA", replacement = N
                     col2 = str_replace_all(col2, pattern = "NA", replacement = NA_character_))
 
 
-#Filling in class names  and day of week to make data tidy
-df <- df %>% fill(c(col1, col2), .direction = "down")
+#Filling in class names to make data tidy
+df <- df %>% fill(col1, .direction = "down")
 
 #### Now it's time to get rid of rows that aren't relevant ####
 
@@ -233,19 +223,110 @@ df <- df %>% filter(!str_detect(col1, pattern = "LevelSection|Section|Jaw|Mich|E
                                 |Conference|Did Orientation|Need to Email|Could be |Chuck|Tutor|tutor|
                                 |Wilson|Katie|Rachelle|TH|M or|Drop|TBD|Permanent|withdrew|term began|Sub|
                                 |College Park|Returning|Rebecca Stewart|Lauren Mai|Meewa|Tonisha|
-                                |Marcela|Donna|Alex|Hallie|Waiting|Additional|Waitlist|Other|SundayAM|Writing"))
-
-
+                                |Marcela|Donna|Alex|Hallie|Waiting|Additional|Waitlist|Other|SundayAM|Writing|
+                                |Administrative"))
 
 
 nrow(df)
 
-#Getting rid of data where it is just a list of volunteer emails or other irrelevant text
-col1_contents <- unique(df$col1)
 
-#Create column - first time volunteer binary
+#Filling in class day to make data tidy
+df <- df %>% fill(col2, .direction = "down")
+
+
+
+df <- df %>% filter(!str_detect(col2, pattern = "Day") & !str_detect(col3, pattern = "SUB REQUEST|SOLO"))
+
+
+## Class Name CLEANUP
+df <- df %>% mutate(col1 = str_remove_all(col1, pattern = "1$|2$|3$|I$|II$|\\+|Level | Level"))
+
+#Add in extra space to differentiate between Intermediate and Intermediate Conv
+df <- df %>% mutate(col1 = str_pad(col1, width = 30, side = "right"))
+
+df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern ="^Intermediate  ") ~ "Intermediate Conversation",
+                                                str_detect(col1, pattern = "Conv ") ~ "Conversation",
+                                                str_detect(col1, pattern = "Grp") ~ "Group",
+                                                str_detect(col1, pattern = "Comp ") ~ "Computer ",
+                                                str_detect(col1, pattern = "1 A") ~ "1A",
+                                                str_detect(col1, pattern = "1 B") ~ "1B",
+                                                str_detect(col1, pattern = "2 A") ~ "2A",
+                                                str_detect(col1, pattern = "2 B") ~ "2B",
+                                                str_detect(col1, pattern = "3 A") ~ "3A",
+                                                str_detect(col1, pattern = "4 A") ~ "4A",
+                                                str_detect(col1, pattern = "AI") ~ "A",
+                                                str_detect(col1, pattern = "BII") ~ "B",
+                                                str_detect(col1, pattern = "Advanced") ~ "Adv",
+                                                TRUE ~ col1)))
+
+
+df <- df %>% mutate(col1 = str_to_upper(col1))
+
+View(df %>% filter(col1 == ""))
+
+nrow(df)
+
+
+df <- df %>% slice(-5874:-5877)
+
+glimpse(df)
+
+
+
+
+#Temporarily replace NAs with string to be able to use str_detect to get rid of junk text
+df <- df %>% mutate(across(c("col3", "col4", "col5"), ~replace_na(., "NA")))
+
+#Because of changes in file layout starting Winter 2019, need to shift data over some
+for (i in 1:nrow(df)) {
+  
+  if (str_detect(df$year[i], pattern = "2019|2020")) {
+    
+    #Adding last name to first name column
+    df$col3[i] <- paste(df$col3[i], df$col4[i])
+    
+    #Adding email to email column
+    df$col4[i] <- df$col5[i]
+    df$col5[i] <- "NA"
+    
+  }
+  
+}
+                   
+
+for (i in 1:nrow(df)) {
+  
+  if (!str_detect(df$col4[i], pattern = "@")) {
+    
+    df$col4[i] <- NA_character_
+    
+  }
+  
+}
+
+
+df <- df %>% rename(class_name = col1, class_day = col2, teacher_name = col3, teacher_email = col4,
+                    teacher_phone = col5)
+
+#Dropping cell number as not a lot of data from last few years
+df <- df %>% select(-teacher_phone)
+
+nrow(df %>% filter(is.na(teacher_email)))
+nrow(df)
+1745 / 6880
+
 #Use str_detect, if punctuation at very beginning of col3 (so *), add YES - to give idea of 
 #percentage new teacher vs returner
+
+
+
+#Getting rid of data where it is just a list of volunteer emails or other irrelevant text
+col1_contents <- unique(df$class_name)
+
+
+
+#Create column - first time volunteer binary
+
 
 
 #Now we need to consolidate the class names - maybe in another script
