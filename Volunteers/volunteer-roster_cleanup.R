@@ -136,12 +136,12 @@ length_df <- nrow(df) - 1
 for (i in 1:length_df) {
   
   #Cases where name is spread over here lines and needs to be consolidated to one
-  if ( str_detect(df$col1[i], pattern = "Conversation|Advanced") &
+  if ( str_detect(df$col1[i], pattern = "Beginning|Intermediate|Conversation|Advanced") &
        str_detect(df$col1[i+1], pattern = "Conversation|English in the|Intermediate|Low Advanced") & 
        str_detect(df$col1[i+2], pattern =  "Advanced II|Advanced I|High|Plus|^II|^I")
   ) {
     #We take this data and add it to the previous row
-    df$col1[i] <- paste0(df$col1[i], " ", df$col1[i+1], df$col1[i+2])
+    df$col1[i] <- paste(df$col1[i], df$col1[i+1], df$col1[i+2])
     
     #We then replace the data to make it easy to delete later. Deleting
     # in the middle of the loop causes issues
@@ -235,11 +235,11 @@ df <- df %>% fill(col2, .direction = "down")
 
 
 
-df <- df %>% filter(!str_detect(col2, pattern = "Day") & !str_detect(col3, pattern = "SUB REQUEST|SOLO"))
+df <- df %>% filter(!str_detect(col2, pattern = "Day|Extra|Tutor|tutor|any |Any ") & !str_detect(col3, pattern = "SUB REQUEST|SOLO"))
 
 
 ## Class Name CLEANUP
-df <- df %>% mutate(col1 = str_remove_all(col1, pattern = "1$|2$|3$|I$|II$|\\+|Level | Level"))
+df <- df %>% mutate(col1 = str_remove_all(col1, pattern = "I$|II$|\\+|Level | Level| 1$| 2$| 3$"))
 
 #Add in extra space to differentiate between Intermediate and Intermediate Conv
 df <- df %>% mutate(col1 = str_pad(col1, width = 30, side = "right"))
@@ -249,7 +249,7 @@ df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern ="^Inte
                                                 str_detect(col1, pattern = "Grp") ~ "Group",
                                                 str_detect(col1, pattern = "Comp ") ~ "Computer ",
                                                 str_detect(col1, pattern = "1 A") ~ "1A",
-                                                str_detect(col1, pattern = "1 B") ~ "1B",
+                                                str_detect(col1, pattern = "1 B|1B1|1B2") ~ "1B",
                                                 str_detect(col1, pattern = "2 A") ~ "2A",
                                                 str_detect(col1, pattern = "2 B") ~ "2B",
                                                 str_detect(col1, pattern = "3 A") ~ "3A",
@@ -313,7 +313,7 @@ df <- df %>% select(-teacher_phone)
 
 nrow(df %>% filter(is.na(teacher_email)))
 nrow(df)
-1745 / 6880
+1238 / 6880
 
 #Use str_detect, if punctuation at very beginning of col3 (so *), add YES - to give idea of 
 #percentage new teacher vs returner
