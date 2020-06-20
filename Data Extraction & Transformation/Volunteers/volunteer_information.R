@@ -5,7 +5,7 @@ library(stringr)
 library(tidyr)
 library(lubridate)
 
-setwd("C:/Users/602770/Downloads/volunteer/wec/Volunteers/Background Information")
+setwd("C:/Users/602770/Downloads/volunteer/wec/Volunteers/Employment_Birthday")
 
 ######## BASIC INFORMATION ########
 file <- list.files()
@@ -39,6 +39,12 @@ df <- distinct(df)
 #Filling in Blank values with NA
 df <- na_if(df, "")
 
+df <- df %>% mutate(last_name = str_to_upper(last_name),
+                    first_name = str_to_upper(first_name))
+
+
+df <- distinct(df)
+
 #write.csv(df, "../../Database/2000-2020_volunteer-information.csv", row.names=FALSE)
 
 
@@ -68,14 +74,26 @@ df_bday <- df_bday %>% mutate(year=as.character(year))
 df_bday <- df_bday %>% mutate(date=str_c(month, day, year, sep="/"))
 df_bday <- df_bday %>% mutate(date=mdy(date))
 
+df_bday <- df_bday %>% mutate(last_name = str_to_upper(last_name),
+                              first_name = str_to_upper(first_name))
 
+
+df_bday <- distinct(df_bday)
+
+
+#Merging together data
 df_volunteers <- full_join(df, df_bday, by=c("last_name", "first_name"))
+
+#Get rid of admin row
+df_volunteers <- df_volunteers %>% slice(-16)
+
+df_volunteers <- df_volunteers %>% mutate(last_name = str_to_title(last_name),
+                                          first_name = str_to_title(first_name))
 
 
 #Checking amount of missing data
-View(df_volunteers %>% filter(is.na(date)))
+nrow(df_volunteers %>% filter(is.na(date)))
 
-173 / 2087
 
 df_volunteers <- distinct(df_volunteers)
 
@@ -84,7 +102,7 @@ df_volunteers <- distinct(df_volunteers)
 #volunteers so need to bring that information in. 
 
 
-write.csv(df_volunteers, "../../Database/2000-2020_volunteers_complete.csv", row.names=FALSE)
+write.csv(df_volunteers, "volunteer-contact-and-employment-info_no-year.csv", row.names=FALSE)
 
 
 
