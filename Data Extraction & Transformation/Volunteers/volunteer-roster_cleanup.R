@@ -7,6 +7,8 @@ library(tidyr)
 
 setwd("/Users/Daniel/Desktop/volunteer-files/")
 
+##### CREATING DATAFRAME FOR ALL YEARS #####
+
 #Reading in files and standardizing capitalization
 files <- str_to_upper(list.files(pattern = "*.xls*", recursive=TRUE))
 
@@ -79,7 +81,7 @@ for (roster in roster_files) {
    
 }
 
-glimpse(df)
+##### CLEANING CLASS NAME COL1 #####
 
 #Sorting dataframe by semester and year
 #First need to make semester a factored variable
@@ -111,26 +113,15 @@ df <- df %>% slice(-3688:-3753)
 nrow(df)
 
 #Temporarily replace NAs with string to be able to use str_detect to get rid of junk text
-df <- df %>% mutate(col1 = replace_na(col1, "NA"),
-                    col2 = replace_na(col2, "NA"))
+#Better way down further down in code
+# df <- df %>% mutate(col1 = replace_na(col1, "NA"),col2 = replace_na(col2, "NA"))
 
-
-#High, Beginner I / II
-#Advanced, Conversation
-#Conversation, Intermediate, High, Intermediate
-#Conversation, Low Advanced, Advanced I/II
-#Intro, Conversation
-#Beginning, Conversation
-#Intermediate/Advanced, Conversation I/II
-#Advanced, Conversation, Plus
-#Advanced, English in the, Workplace
-#Advanced, Workplace
-#Advanced, II
-#Advanced, Summit
+#Using new Across method rather than mutate_at
+df <- df %>% mutate(across(c("col1", "col2","col3", "col4", "col5"), ~replace_na(., "NA")))
 
 length_df <- nrow(df) - 1
 
-#### THREE PLUS ####
+#### DEALING WITH CLASS NAME SPREAD OVER THREE PLUS ROWS ####
 #Case of class name being spread over 3 or 4 rows
 for (i in 1:length_df) {
   
@@ -167,26 +158,19 @@ for (i in 1:length_df) {
   }
 }
 
-
-
 #Get rid of SKIP columns
 df <- df %>% filter(!str_detect(col1, pattern = "SKIP"))
 
-
-#Add conversation to #Intermediate/Advanced in col1 and 202/204 in col2
-#View(df %>% filter(str_detect(col2, pattern = "202|204")))
-
+#Adds conversation to #Intermediate/Advanced in col1 and 202/204 in col2
 for (i in 1:nrow(df)) {
   
-  #Adds conversation to class names that are unclear
   if (str_detect(df$col2[i], pattern = "202|204") & str_detect(df$col1[i], pattern = "Citizenship|Conversation", negate = TRUE)) {
-    
+
     df$col1[i] <- paste(df$col1[i], "Conversation")
     
   }
 }
 
-#Clearing first column to make data tidyr in terms of class data
 #Couldn't figure out a tidy way of doing this so using for loop for now...
 for (i in 1:nrow(df)) {
 
@@ -203,13 +187,11 @@ for (i in 1:nrow(df)) {
 #write.csv(df, "test.csv", row.names = FALSE)
 
 #Manual deletion - necessary due to manual untidyness of data
-df <- df %>% slice(-2846:-2860,-4353:-4366,-4655:-4664,
-                   -4710:-4719,-4895:-4900)
+df <- df %>% slice(-2846:-2860,-4353:-4366,-4655:-4664,-4710:-4719,-4895:-4900)
 
 #Reverting back to all NA_character_
 df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "NA", replacement = NA_character_),
                     col2 = str_replace_all(col2, pattern = "NA", replacement = NA_character_))
-
 
 #Filling in class names to make data tidy
 df <- df %>% fill(col1, .direction = "down")
@@ -224,27 +206,24 @@ df <- df %>% filter(!str_detect(col1, pattern = "LevelSection|Section|Jaw|Mich|E
                                 |College Park|Returning|Rebecca Stewart|Lauren Mai|Meewa|Tonisha|
                                 |Marcela|Donna|Alex|Hallie|Waiting|Additional|Waitlist|Other|SundayAM|Writing|
                                 |Administrative"))
-
 nrow(df)
 
 #Filling in class day to make data tidy
 df <- df %>% fill(col2, .direction = "down")
 
-df <- df %>% filter(!str_detect(col2, pattern = "Day|Extra|Tutor|tutor|any |Any ") & !str_detect(col3, pattern = "SUB REQUEST|SOLO"))
-
+df <- df %>% filter(!str_detect(col2, pattern = "Day|Extra|Tutor|tutor|any |Any ") 
+                    & !str_detect(col3, pattern = "SUB REQUEST|SOLO"))
 
 ## Class Name CLEANUP
 df <- df %>% mutate(col1 = str_remove_all(col1, pattern = "I$|II$|\\+|Level | Level| 1$| 2$| 3$"))
 
 #Add in extra space to differentiate between Intermediate and Intermediate Conv
-df <- df %>% mutate(col1 = str_pad(col1, width = 30, side = "right"))
+df <- df %>% mutate(col1 = str_pad(col1, width = 30, side = "right"),
+                    col3 = str_pad(col3, width = 30, side="right"))
 
-#Need to FIX
-df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern ="^Intermediate  ") ~ "Intermediate Conversation",
-                                                str_detect(col1, pattern = "Conv ") ~ "Conversation",
-                                                str_detect(col1, pattern = "Grp") ~ "Group",
-                                                str_detect(col1, pattern = "Comp ") ~ "Computer ",
-                                                str_detect(col1, pattern = "1 A") ~ "1A",
+#Cases where the entire row is the value that needs to be replaced - 
+#remaining that are parts of a string are fixed below.
+df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern = "1 A") ~ "1A",
                                                 str_detect(col1, pattern = "1 B|1B1|1B2") ~ "1B",
                                                 str_detect(col1, pattern = "2 A") ~ "2A",
                                                 str_detect(col1, pattern = "2 B") ~ "2B",
@@ -253,21 +232,39 @@ df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern ="^Inte
                                                 TRUE ~ col1)))
 
 #Need to replace only part of string vs whole thing as above
-# df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "AI", replacement = "A"))
-# str_detect(col1, pattern = "BII") ~ "B",
-# str_detect(col1, pattern = "Advanced") ~ "Adc",
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "^Intermediate  ", replacement = "Intermediate Conversation"))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Conv |Conv$", replacement = "Conversation"))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Comp |Comp$", replacement = "Computer "))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Grp", replacement = "Group"))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "AI", replacement = "A"))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "BII", replacement = "B"))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Advanced", replacement = "Adv"))
 
 df <- df %>% mutate(col1 = str_to_upper(col1))
 
-nrow(df %>% filter(col1 == ""))
+#Make sure no extra spaces - using new across method
+df <- df %>% mutate(across(everything(), ~str_trim(.)))
+df <- df %>% mutate(across(everything(), ~str_squish(.)))
+
 
 nrow(df)
 
 df <- df %>% slice(-5874:-5877)
 
-#Temporarily replace NAs with string to be able to use str_detect to get rid of junk text
-#Using new Across method rather than mutate_at
-df <- df %>% mutate(across(c("col3", "col4", "col5"), ~replace_na(., "NA")))
+#FALL 2011 has some issues but only on part of the file
+for (i in 1:nrow(df)) {
+  
+  if (str_detect(df$year[i], pattern = "2011") & str_detect(df$semester[i], pattern = "FALL") &
+      nchar(df$col3[i]) <= 2) {
+    
+    #Adding last name to first name column
+    df$col3[i] <- paste(df$col4[i])
+    
+    #Adding email to email column
+    df$col4[i] <- df$col5[i]
+    df$col5[i] <- NA_character_
+  }
+}
 
 #Because of changes in file layout starting Winter 2019, need to shift data over some
 for (i in 1:nrow(df)) {
@@ -280,11 +277,10 @@ for (i in 1:nrow(df)) {
     #Adding email to email column
     df$col4[i] <- df$col5[i]
     df$col5[i] <- "NA"
-    
   }
-  
 }
-                   
+
+
 #Replacing rows where the data is not an email to NA
 for (i in 1:nrow(df)) {
   
@@ -296,31 +292,34 @@ for (i in 1:nrow(df)) {
 }
 
 #Bringing in some more specific column names
-df <- df %>% rename(class_name = col1, class_day = col2, teacher_name = col3, teacher_email = col4,
-                    teacher_phone = col5)
+df <- df %>% rename(class_name = col1, class_day = col2, teacher_name = col3, 
+                    teacher_email = col4, teacher_phone = col5)
 
 #Dropping cell number as not a lot of data from last few years
 df <- df %>% select(-teacher_phone)
 
-nrow(df %>% filter(is.na(teacher_email)))
+nrow(df %>% filter(is.na(teacher_email))) / nrow(df)
+
 nrow(df)
-1238 / 6880
-
-#Make sure no extra spaces - using new across method
-df <- df %>% mutate(across(everything(), ~str_trim(.)))
-
-#Use str_detect, if punctuation at very beginning of col3 (so *), add YES - to give idea of 
-#percentage new teacher vs returner
 
 
+#Use str_detect, if punctuation at very beginning of col3 (so *), add YES
+#To give idea of percentage new teacher vs returner
+df <- df %>% mutate(new_volunteer = case_when(str_detect(teacher_name, pattern = "\\*") ~ "Yes",TRUE ~ 'No'))
+
+df <- df %>% mutate(teacher_name = str_replace_all(teacher_name, pattern = "\\*", replacement = ""))
+
+#Rearranging columns
+df <- df %>% select(c("class_name":"teacher_name", "new_volunteer", everything()))
+
+#Getting rid of rows with no teacher info or unclear info
+df <- df %>% filter(!str_detect(teacher_name, pattern = "TBD|\\?|\\-\\-+|day|Yes|No |NO |no "))
+
+#Reverting remaining columns (col3, col4, col5)
+df <- df %>% mutate(across(everything(), ~na_if(., "NA")))
 
 #Getting rid of data where it is just a list of volunteer emails or other irrelevant text
 col1_contents <- unique(df$class_name)
-
-
-
-#Create column - first time volunteer binary
-
 
 
 #Now we need to consolidate the class names - maybe in another script
@@ -328,7 +327,10 @@ col1_contents <- unique(df$class_name)
 
 
 
-## CODE GRAVEYARD ##
+
+
+
+#### CODE GRAVEYARD ####
 
 #Alrighty, now it's cleanin' time
 #Using new dplyr verb across to filter specific columns that are not na
@@ -354,23 +356,15 @@ col1_contents <- unique(df$class_name)
 #                                     |of|Moc|winter|Charles|Sula||Erin|Jess|Camer|Elsa|Brain|workbook|
 #                                     |shares|Satur|April|12|No class|https|WHITE|Summer|Preston|Monday|
 #                                     |Georgetown|Bob|Name|Aileen|Ina|11AM|9|4PM")))
-# 
-# 
-# 
-# #Need to figure this out
-# #For certain
-# 
+
 # df <- df %>% filter(str_replace_all(col1, pattern = ""),
 #                     replacement = NA_character_)
-
 
 #Anonymous/lambda function version
 #colnames(raw) <- map(y, function(x) paste0("col", y))
 
 #'Formula' version
 #colnames(raw) <- map(y, ~paste0("col", .x))
-
-
 
 # Although the intuition of converting a list to a dataframe to then use stringr works,
 # purrr provides the solutions for filtering without having to take extra steps and with
@@ -379,8 +373,6 @@ col1_contents <- unique(df$class_name)
 # #Gets all the excel files and deals with folders - 318
 # files <- as.data.frame(list.files(pattern = "*.xls*", recursive=TRUE), stringsAsFactors = FALSE)
 # colnames(files) <- 'paths'
-# 
-# 
 # 
 # roster_files <- files %>% filter(!str_detect(paths, pattern = "List|Log|Potential|Show|Sign|sign|Training|Tutor"))
 # other_files <- files %>% filter(str_detect(paths, pattern = "List|Log|Potential|Show|Sign|sign|Training|Tutor"))
@@ -399,5 +391,3 @@ col1_contents <- unique(df$class_name)
     #   raw <- read_excel(roster, skip = 1, sheet = excel_sheets(roster)[1], col_types = "text")
     #   
     # }
-    
-   
