@@ -233,7 +233,7 @@ df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern = "1 A"
 
 #Need to replace only part of string vs whole thing as above
 df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "^Intermediate  ", replacement = "Intermediate Conversation"))
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Conv |Conv$", replacement = "Conversation"))
+df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Conv |Conv$|Convo |CONVO ", replacement = "Conversation "))
 df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Comp |Comp$", replacement = "Computer "))
 df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Grp", replacement = "Group"))
 df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "AI", replacement = "A"))
@@ -241,11 +241,6 @@ df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "BII", replacement = 
 df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Advanced", replacement = "Adv"))
 
 df <- df %>% mutate(col1 = str_to_upper(col1))
-
-#Make sure no extra spaces - using new across method
-df <- df %>% mutate(across(everything(), ~str_trim(.)))
-df <- df %>% mutate(across(everything(), ~str_squish(.)))
-
 
 nrow(df)
 
@@ -317,6 +312,12 @@ df <- df %>% filter(!str_detect(teacher_name, pattern = "TBD|\\?|\\-\\-+|day|Yes
 
 #Reverting remaining columns (col3, col4, col5)
 df <- df %>% mutate(across(everything(), ~na_if(., "NA")))
+
+#Make sure no extra spaces - using new across method
+df <- df %>% mutate(across(everything(), ~str_trim(.)))
+df <- df %>% mutate(across(everything(), ~str_squish(.)))
+
+
 
 #Getting rid of data where it is just a list of volunteer emails or other irrelevant text
 col1_contents <- unique(df$class_name)
