@@ -232,15 +232,51 @@ df <- df %>% mutate(col1 = str_squish(case_when(str_detect(col1, pattern = "1 A"
                                                 TRUE ~ col1)))
 
 #Need to replace only part of string vs whole thing as above
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "^Intermediate  ", replacement = "Intermediate Conversation"))
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Conv |Conv$|Convo |CONVO ", replacement = "Conversation "))
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Comp |Comp$", replacement = "Computer "))
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Grp", replacement = "Group"))
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "AI", replacement = "A"))
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "BII", replacement = "B"))
-df <- df %>% mutate(col1 = str_replace_all(col1, pattern = "Advanced", replacement = "Adv"))
+df <- df %>% mutate(col1 = str_replace_all(col1, c("^Intermediate  " = "Intermediate Conversation",
+                                                   "Grp" = "Group","AI"= "A","BII" = "B","Advanced" = "Adv")))
+                                           
+df <- df %>% mutate(col1 = str_to_upper(str_replace_all(col1, pattern = " ", replacement = "-")))
 
-df <- df %>% mutate(col1 = str_to_upper(col1))
+col1_contents <- unique(df$class_name)
+
+#Bringing in standardization from other script
+df <- df %>% mutate(col1 = str_squish(str_replace_all(col1, c("CONVERSATION|CC|CONVO" = "CONV", "GRAMMAR" = "GRAM",
+                                             "BEGINNERS|BEGINNER|BEGINNING" = "BEG","INTERMEDIATE" = "INTER", 
+                                             "SPANISH" = "SPAN", "-ENGLISH" = "-ENG", "BEG-CONV|BEG-CON" = "CONV-BEG",
+                                             "INT-CONV|INT-CON" = "CONV-INTRO",  "LITERACY" = "LIT", 
+                                             "LANGUAGE" = "LANG","COMPUTERS|COMPUTER" = "COMP", "VPLUS" = "V-PLUS", 
+                                             "VLOWADV" = "V-LOW-ADV", "INTER-INTER" = "INTER",
+                                             "ADV-FINAL" = "6", "CHOIR" = "CHORUS", "VV" = "V", "ADV-ADV" = "ADV",
+                                             
+                                             "BASIC" = "INTRO", "CONV-CLUB-" = "CONV-", "INTER-CONV" = "CONV-INTER",
+                                             "ADV-N" = "5A", "ADV-A" = "5A", "ADV-R" = "5B", "ADV-B" = "5B",
+                                             "ADV-PLUS-N" = "6A", "ADV-PLUS-A" = "6A",
+                                             "ADV-PLUS-R" = "6B", "ADV-PLUS-B" = "6B",
+                                             
+                                             "ADV-PLUS-CONV" = "CONV-ADV-PLUS", "ADV-PLUSCONV" = "CONV-ADV-PLUS",
+                                             "ADVCONV|ADV-CON|ADV-CONV" = "CONV-ADV", "ADV-CONV" = "CONV-ADV",
+                                             "^ADV-PLUS" = "6", "^ADV-PLUS-I" = "6-I", "^ADV-PLUS-II" = "6-II",
+                                             
+                                          
+                                             "CITIZENSHIP" = "CITIZEN", "CAREER-EXPLORATION" = "CAREER-EXPLOR",
+                                             "MICROSOFT" = "MS", "OFFICE-ASSISTANT" = "OFFICE-ASSIST",
+                                             "POWER-POINT" = "PP", "INTRODUCTION" = "INTRO",
+                                             
+                                             "CIVICS-INTRO-A-II" = "CIVICS-INTRO-A", "6N" = "6A",
+                                             "INTCONV" = "CONV-INT", "^ADV " = "5",
+                                             
+                                             #Although we standardized it in the above replacements, getting
+                                             #rid of the day/time for a simple version with simply content level
+                                             #Will create a more complete class name with all information below.
+                                             
+                                             "-AM|-PM|-WKND|-SAT|-SUN|-TTH|-MTH|-MW|-E |-P |-WK |\\.|'S" = "",
+                                             "-E-" = "-", "6BR" = "6B","-PREP|-CLASS" = "", "PREINTRO|PREBASIC" = "PRE-INTRO",
+                                             "-PREP-" = "-", "INTRO-TO-COMP" = "COMP-INTRO", "INT-COMP" = "COMP-INTER",
+                                             "-INT-" = "-INTER-", "-INT " = "-INTER", "COMP-101" = "COMP-INTRO",
+                                             "COMP-102" = "COMP-INTER", "^ADV  " = "5", "-TRANING" = "",
+                                             "MS-WORD-OFFICE-ASSISTS" = "MS-WORD-OFFICE-ASSIST", " " = ""
+                                             
+                                           ))))
 
 nrow(df)
 
