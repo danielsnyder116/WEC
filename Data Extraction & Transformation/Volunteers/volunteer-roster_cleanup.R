@@ -348,9 +348,11 @@ df <- df %>% mutate(across(everything(), ~str_squish(.)))
 col1_contents <- unique(df$class_name)
 
 
-write.csv(df, "for-now_volunteer-roster_2006-2019.csv", row.names = FALSE)
+df_final <- df %>% select(c("class_name":"year"))
 
+write.csv(df_final, "for-now_volunteer-roster_2006-2019.csv", row.names = FALSE)
 
+#Will check and fill in the rest with excel - just too much variation and issues
 
 
 
