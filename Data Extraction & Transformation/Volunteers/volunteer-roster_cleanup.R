@@ -205,7 +205,7 @@ df <- df %>% filter(!str_detect(col1, pattern = "LevelSection|Section|Jaw|Mich|E
                                 |Wilson|Katie|Rachelle|TH|M or|Drop|TBD|Permanent|withdrew|term began|Sub|
                                 |College Park|Returning|Rebecca Stewart|Lauren Mai|Meewa|Tonisha|
                                 |Marcela|Donna|Alex|Hallie|Waiting|Additional|Waitlist|Other|SundayAM|Writing|
-                                |Administrative"))
+                                |Administrative|Summit|Wednesdays"))
 nrow(df)
 
 #Filling in class day to make data tidy
@@ -236,51 +236,45 @@ df <- df %>% mutate(col1 = str_replace_all(col1, c("^Intermediate  " = "Intermed
                                                    "Grp" = "Group","AI"= "A","BII" = "B","Advanced" = "Adv")))
                                            
 df <- df %>% mutate(col1 = str_to_upper(str_replace_all(col1, pattern = " ", replacement = "-")))
+df <- df %>% mutate(col1 = str_pad(col1, width = 30, side = "right"))
 
-col1_contents <- unique(df$class_name)
+col1_contents <- unique(df$col1)
 
 #Bringing in standardization from other script
-df <- df %>% mutate(col1 = str_squish(str_replace_all(col1, c("CONVERSATION|CC|CONVO" = "CONV", "GRAMMAR" = "GRAM",
+df <- df %>% mutate(col1 = str_replace_all(col1, c("CONVERSATION|CC|CONVO" = "CONV", "GRAMMAR" = "GRAM",
                                              "BEGINNERS|BEGINNER|BEGINNING" = "BEG","INTERMEDIATE" = "INTER", 
                                              "SPANISH" = "SPAN", "-ENGLISH" = "-ENG", "BEG-CONV|BEG-CON" = "CONV-BEG",
-                                             "INT-CONV|INT-CON" = "CONV-INTRO",  "LITERACY" = "LIT", 
-                                             "LANGUAGE" = "LANG","COMPUTERS|COMPUTER" = "COMP", "VPLUS" = "V-PLUS", 
-                                             "VLOWADV" = "V-LOW-ADV", "INTER-INTER" = "INTER",
-                                             "ADV-FINAL" = "6", "CHOIR" = "CHORUS", "VV" = "V", "ADV-ADV" = "ADV",
+                                             "INT-CONV |INT-CON |CONV-INT " = "CONV-INTER",  "LITERACY" = "LIT", 
+                                             "LANGUAGE" = "LANG","COMPUTERS|COMPUTER" = "COMP",  
+                                             "INTER-INTER" = "INTER","CHOIR" = "CHORUS", "ADV-ADV" = "ADV",
+                                             "BASIC" = "INTRO", "CONV-CLUB-" = "CONV-", "INTER-CONV " = "CONV-INTER",
                                              
-                                             "BASIC" = "INTRO", "CONV-CLUB-" = "CONV-", "INTER-CONV" = "CONV-INTER",
-                                             "ADV-N" = "5A", "ADV-A" = "5A", "ADV-R" = "5B", "ADV-B" = "5B",
-                                             "ADV-PLUS-N" = "6A", "ADV-PLUS-A" = "6A",
-                                             "ADV-PLUS-R" = "6B", "ADV-PLUS-B" = "6B",
-                                             
-                                             "ADV-PLUS-CONV" = "CONV-ADV-PLUS", "ADV-PLUSCONV" = "CONV-ADV-PLUS",
-                                             "ADVCONV|ADV-CON|ADV-CONV" = "CONV-ADV", "ADV-CONV" = "CONV-ADV",
-                                             "^ADV-PLUS" = "6", "^ADV-PLUS-I" = "6-I", "^ADV-PLUS-II" = "6-II",
-                                             
-                                          
+                                             "ADV-PLUS-CONV" = "CONV-ADV-PLUS","ADVCONV|ADV-CONV|ADV-CON" = "CONV-ADV",
+                                             "ADV-N|ADV-A|ADV-5A" = "5A", "ADV-R|ADV-B" = "5B",
+                                             "ADV-PLUS-N|ADV-PLUS-A" = "6A", "ADV-PLUS-R|ADV-PLUS-B|ADV-PLUS-RR" = "6B",
+                                             "^ADV-PLUS |ADV-FINAL" = "6", "6N" = "6A", "^ADV  " = "5",
+                                             "6BR" = "6B", "COMPENG" = "COMP-ENG",
+
                                              "CITIZENSHIP" = "CITIZEN", "CAREER-EXPLORATION" = "CAREER-EXPLOR",
                                              "MICROSOFT" = "MS", "OFFICE-ASSISTANT" = "OFFICE-ASSIST",
-                                             "POWER-POINT" = "PP", "INTRODUCTION" = "INTRO",
+                                             "POWER-POINT" = "PP", "INTRODUCTION" = "INTRO", "VV" = "V",
+                                             "-TUESDAYSTHURSDAYS|-CLASS|-PREP|TRANING|TRAINING" = "",
                                              
-                                             "CIVICS-INTRO-A-II" = "CIVICS-INTRO-A", "6N" = "6A",
-                                             "INTCONV" = "CONV-INT", "^ADV " = "5",
-                                             
-                                             #Although we standardized it in the above replacements, getting
-                                             #rid of the day/time for a simple version with simply content level
-                                             #Will create a more complete class name with all information below.
-                                             
-                                             "-AM|-PM|-WKND|-SAT|-SUN|-TTH|-MTH|-MW|-E |-P |-WK |\\.|'S" = "",
-                                             "-E-" = "-", "6BR" = "6B","-PREP|-CLASS" = "", "PREINTRO|PREBASIC" = "PRE-INTRO",
-                                             "-PREP-" = "-", "INTRO-TO-COMP" = "COMP-INTRO", "INT-COMP" = "COMP-INTER",
-                                             "-INT-" = "-INTER-", "-INT " = "-INTER", "COMP-101" = "COMP-INTRO",
-                                             "COMP-102" = "COMP-INTER", "^ADV  " = "5", "-TRANING" = "",
-                                             "MS-WORD-OFFICE-ASSISTS" = "MS-WORD-OFFICE-ASSIST", " " = ""
-                                             
-                                           ))))
+                                             "PREINTRO|PREBASIC" = "PRE-INTRO",
+                                             "INTRO-TO-COMP" = "COMP-INTRO", "INT-COMP" = "COMP-INTER",
+                                             "COMP-101" = "COMP-INTRO","COMP-102" = "COMP-INTER"," " = "",
+                                             "INTRO-CONV" = "CONV-INTRO",  
+                                             "TENLEYTOWN-CONV|CONV-GROUP-AT-SHAW-LIBRARY" = "CONV-GROUP",
+                                             "BEG-COMP" = "COMP-INTRO", 
+                                             "CONV-INT  |CONV-INTER-HIGH|INTER-CONV-LOW-ADV" = "CONV-INTER",
+                                             "CONV-ADV-INTER|CONV-ADV-PLUS|CONV-LOW-ADV|ADV-INTER-CONV" = "CONV-ADV", 
+                                             "CONV-BEG" = "CONV-INTRO"
+          
+                                           )))
+
+df <- df %>% mutate(col1 = str_squish(col1))
 
 nrow(df)
-
-df <- df %>% slice(-5874:-5877)
 
 #FALL 2011 has some issues but only on part of the file
 for (i in 1:nrow(df)) {
@@ -323,11 +317,9 @@ for (i in 1:nrow(df)) {
 }
 
 #Bringing in some more specific column names
-df <- df %>% rename(class_name = col1, class_day = col2, teacher_name = col3, 
-                    teacher_email = col4, teacher_phone = col5)
-
 #Dropping cell number as not a lot of data from last few years
-df <- df %>% select(-teacher_phone)
+df <- df %>% rename(class_name = col1, class_day = col2, teacher_name = col3, 
+                    teacher_email = col4, teacher_phone = col5) %>% select(-teacher_phone)
 
 nrow(df %>% filter(is.na(teacher_email))) / nrow(df)
 
@@ -336,9 +328,8 @@ nrow(df)
 
 #Use str_detect, if punctuation at very beginning of col3 (so *), add YES
 #To give idea of percentage new teacher vs returner
-df <- df %>% mutate(new_volunteer = case_when(str_detect(teacher_name, pattern = "\\*") ~ "Yes",TRUE ~ 'No'))
-
-df <- df %>% mutate(teacher_name = str_replace_all(teacher_name, pattern = "\\*", replacement = ""))
+df <- df %>% mutate(new_volunteer = case_when(str_detect(teacher_name, pattern = "\\*") ~ "Yes",TRUE ~ 'No'),
+                    teacher_name = str_replace_all(teacher_name, pattern = "\\*", replacement = ""))
 
 #Rearranging columns
 df <- df %>% select(c("class_name":"teacher_name", "new_volunteer", everything()))
@@ -353,15 +344,11 @@ df <- df %>% mutate(across(everything(), ~na_if(., "NA")))
 df <- df %>% mutate(across(everything(), ~str_trim(.)))
 df <- df %>% mutate(across(everything(), ~str_squish(.)))
 
-
-
 #Getting rid of data where it is just a list of volunteer emails or other irrelevant text
 col1_contents <- unique(df$class_name)
 
 
-#Now we need to consolidate the class names - maybe in another script
-
-
+write.csv(df, "for-now_volunteer-roster_2006-2019.csv", row.names = FALSE)
 
 
 
