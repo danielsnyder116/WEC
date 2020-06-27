@@ -43,3 +43,30 @@ ggplot(data=gender_ratio, aes(x=year, y=num_gender, color=gender)) + geom_point(
 
 
 
+
+##### AGE DISTRIBUTION OVER TIME ####
+
+#This gives the actual frequency distribution over time but since we aren't concerned 
+#about total counts and more about percentages we will do another version to
+#isolate that change
+
+#Warning of removing non-finite values refers to NA values excluded - no worries
+
+filtered_data <- data %>% filter(year > 2010)
+
+#Basic histogram with counts of students by age
+ggplot(data=filtered_data, aes(x=age)) + 
+  geom_histogram(bins = 40, color='black', fill='blue') +
+  facet_wrap(semester~year)
+
+#Density histogram
+ggplot(data=filtered_data, aes(x=age, fill=factor(year))) + 
+  geom_histogram(aes(y=..density..), bins=20, color='black') + 
+  facet_wrap(.~year) #+ geom_density()
+
+#Clearer density plot with area under the curve
+ggplot(data=filtered_data, aes(x=age)) + geom_density(fill="lightblue", alpha=.3) + 
+      facet_wrap(.~year)
+
+
+
