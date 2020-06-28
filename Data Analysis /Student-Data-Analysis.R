@@ -1,5 +1,7 @@
 library(ggplot2)
 library(dplyr)
+library(forcats)
+library(RColorBrewer)
 
 setwd("/Users/Daniel/Desktop")
 data <- read.csv("student-class-blackbaud-input_2000-2019.csv")
@@ -26,12 +28,11 @@ gender_ratio <- data %>% filter(!is.na(gender)) %>% group_by(semester, year, gen
                       
 gender_colors <- c("red", "blue")
 
-ggplot(data=gender_ratio, aes(x=year, y=num_gender, color=gender)) + geom_point(alpha=.5) +
+ggplot(data=gender_ratio, aes(x=year, y=num_gender, fill=gender)) + geom_point(shape=21, alpha=.8, color='black') +
   stat_smooth(method = "loess", span = .95, se=TRUE, alpha=.3) + facet_grid(.~semester) +
        scale_color_manual("Gender", values=gender_colors) 
 
 #Add in title, clean axis labels and add in more ticks
-
 
 # # Bar graph of gender over time - not the best way but interesting to make
 # ggplot(data=gender_ratio, aes(x=gender, y=num_gender, fill=gender)) + geom_col() +
@@ -42,8 +43,6 @@ ggplot(data=gender_ratio, aes(x=year, y=num_gender, color=gender)) + geom_point(
 #geom_col - set the value to compare (frequency, proportion, length, etc.)
 
 
-
-
 ##### AGE DISTRIBUTION OVER TIME ####
 
 #This gives the actual frequency distribution over time but since we aren't concerned 
@@ -52,21 +51,49 @@ ggplot(data=gender_ratio, aes(x=year, y=num_gender, color=gender)) + geom_point(
 
 #Warning of removing non-finite values refers to NA values excluded - no worries
 
-filtered_data <- data %>% filter(year > 2010)
-
 #Basic histogram with counts of students by age
-ggplot(data=filtered_data, aes(x=age)) + 
-  geom_histogram(bins = 40, color='black', fill='blue') +
-  facet_wrap(semester~year)
+ggplot(data=data, aes(x=age)) + 
+  geom_histogram(bins = 40, color='black', fill='lightgreen') +
+  facet_wrap(.~semester) #semester~year to get every case
 
 #Density histogram
-ggplot(data=filtered_data, aes(x=age, fill=factor(year))) + 
+# Without year as factor it colors by intensity - categorical vs numeric 
+ggplot(data=data, aes(x=age, fill=factor(year))) + 
   geom_histogram(aes(y=..density..), bins=20, color='black') + 
   facet_wrap(.~year) #+ geom_density()
 
 #Clearer density plot with area under the curve
-ggplot(data=filtered_data, aes(x=age)) + geom_density(fill="lightblue", alpha=.3) + 
+ggplot(data=data, aes(x=age)) + geom_density(fill="lightblue", alpha=.3) + 
       facet_wrap(.~year)
 
 
+#### MEDIAN AGE OVER TIME ####
+
+#By Semester
+median_age_sem <- data %>% group_by(semester, year) %>% filter(!is.na(age)) %>%
+  summarize(med_age=median(age, na.rm = TRUE))
+
+ggplot(data=median_age_sem, aes(x=year, y=med_age)) + geom_point(shape=21, fill="#56B4E9") + 
+    facet_grid(.~semester) + stat_smooth(method = "loess", span=.95)
+
+#Year Average
+median_age_year <- data %>% group_by(year) %>% filter(!is.na(age)) %>%
+  summarize(med_age=median(age, na.rm=TRUE))
+
+ggplot(data=median_age_year, aes(x=year, y=med_age)) + 
+    geom_point(shape=21, fill='#48a072') +
+    stat_smooth(method="loess", span=.95, color='#48a072')
+
+
+#### TOP 10 COUNTRIES OF ORIGIN OVER THE YEARS ####
+student_countries <- data %>% filter(!is.na(country)) %>%
+                          group_by(year, country) %>%
+                          summarize(num_country=n()) %>%
+                          arrange(year, desc(num_country)) %>%
+                          mutate(country=fct_inorder(country))
+
+
+slice_max(student_countries, order_by=num_country, n=40) %>%
+ggplot(aes(x=country, y=num_country, fill=country)) + geom_col() +
+coord_flip()
 
