@@ -1,3 +1,10 @@
+---
+title: "Student Data Analysis with Graphs"
+output: html_notebook
+---
+This is a collection of Exploratory Data Analyses of Washington English Center's Student Data from 2000-2019. 
+
+```{r}
 library(ggplot2)
 library(dplyr)
 library(forcats)
@@ -6,23 +13,22 @@ library(RColorBrewer)
 setwd("/Users/Daniel/Desktop")
 data <- read.csv("student-class-blackbaud-input_2000-2019.csv")
 
-glimpse(data)
-
 data <- data %>% mutate(semester=factor(semester, levels = c("WINTER", "SPRING", "SUMMER", "FALL")))
-
+```
 
 #### NUMBER OF STUDENTS BY SEASON OVER TIME ####
-
 #Each row is a unique student which is why just doing n() in summarize gives us that number
+
+```{r}
 student_count <- data %>% group_by(semester, year) %>% summarize(num_students=n())
 seasons <- c("#4E79A7", "#59A14F", "#EDC948","#F28E2B")
 ggplot(data=student_count, aes(x=year, y=num_students, fill=semester)) + geom_point(shape=21, size=2) +
   facet_grid(.~ semester) + stat_smooth(method="loess", span=.95, color="#76B7B2") +
   scale_fill_manual("Semester", values=seasons)
-
-
+```
 #### TOTAL NUMBER OF MALE AND FEMALE STUDENTS BY SEASON OVER TIME ####
 #count(data, vars=gender)
+```{r}
 gender_ratio <- data %>% filter(!is.na(gender)) %>% group_by(semester, year, gender) %>%
                     summarize(num_gender = n())
                       
@@ -42,7 +48,7 @@ ggplot(data=gender_ratio, aes(x=year, y=num_gender, fill=gender)) + geom_point(s
 #geom_bar - allow ggplot to count frequency for you
 #geom_col - set the value to compare (frequency, proportion, length, etc.)
 
-
+```
 ##### AGE DISTRIBUTION OVER TIME ####
 
 #This gives the actual frequency distribution over time but since we aren't concerned 
@@ -50,42 +56,45 @@ ggplot(data=gender_ratio, aes(x=year, y=num_gender, fill=gender)) + geom_point(s
 #isolate that change
 
 #Warning of removing non-finite values refers to NA values excluded - no worries
-
 #Basic histogram with counts of students by age
+```{r}
 ggplot(data=data, aes(x=age)) + 
   geom_histogram(bins = 40, color='black', fill='lightgreen') +
   facet_wrap(.~semester) #semester~year to get every case
-
+```
 #Density histogram
 # Without year as factor it colors by intensity - categorical vs numeric 
+```{r}
 ggplot(data=data, aes(x=age, fill=factor(year))) + 
   geom_histogram(aes(y=..density..), bins=20, color='black') + 
   facet_wrap(.~year) #+ geom_density()
-
+```
 #Clearer density plot with area under the curve
+```{r}
 ggplot(data=data, aes(x=age)) + geom_density(fill="lightblue", alpha=.3) + 
       facet_wrap(.~year)
-
-
+```
 #### MEDIAN AGE OVER TIME ####
 
 #By Semester
+```{r}
 median_age_sem <- data %>% group_by(semester, year) %>% filter(!is.na(age)) %>%
   summarize(med_age=median(age, na.rm = TRUE))
 
 ggplot(data=median_age_sem, aes(x=year, y=med_age)) + geom_point(shape=21, fill="#56B4E9") + 
     facet_grid(.~semester) + stat_smooth(method = "loess", span=.95)
-
+```
 #Year Average
+```{r}
 median_age_year <- data %>% group_by(year) %>% filter(!is.na(age)) %>%
   summarize(med_age=median(age, na.rm=TRUE))
 
 ggplot(data=median_age_year, aes(x=year, y=med_age)) + 
     geom_point(shape=21, fill='#48a072') +
     stat_smooth(method="loess", span=.95, color='#48a072')
-
-
+```
 #### TOP 10 COUNTRIES OF ORIGIN OVER THE YEARS ####
+```{r}
 student_countries <- data %>% filter(!is.na(country)) %>%
                           group_by(country) %>%
                           summarize(num_country=n()) %>%
@@ -107,8 +116,9 @@ student_countries %>% slice(1:10) %>%
   #theme(legend.position = "None") + 
   geom_text(aes(label = paste0(100*round(num_country/sum(num_country), 3), "%")),
             hjust = 1.1, size=3)
-
+```
 ## Top 10 Countries OVER THE YEARS ##
+```{r}
 student_country_year <- data %>% filter(!is.na(country)) %>%
                              group_by(year, country) %>%
                              summarize(num_country=n()) %>%
@@ -128,27 +138,5 @@ for (i in 2000:2019) {
                 geom_text(aes(label = paste0(100*round(num_country/sum(num_country), 3), "%, ", num_country)), hjust = 1, size=3)
 
   print(result)
-
 }
-
-
-data %>% summarize(test = count(ethnicity))
-
-
-
-
-#Diverging - gradient with at least two hues
-#Qualitative - apples vs oranges vs bananas
-#Sequential - gradient with one dominant hue
-
-
-#Displays individual palette
-display.brewer.pal(6, "Oranges")
-
-wec_palette <- c("#0C0D0D","#5E605E","#FDFEFB","#91B9C","#3BE3F")
-
-brewer.pal.info
-
-#Displays all the palettes
-display.brewer.all()
-
+```
