@@ -132,9 +132,6 @@ for (i in 2000:2019) {
 }
 
 
-data %>% summarize(test = count(ethnicity))
-
-
 
 
 #Diverging - gradient with at least two hues
