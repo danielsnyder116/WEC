@@ -3,6 +3,11 @@ library(dplyr)
 library(forcats)
 library(RColorBrewer)
 
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(maps)
+
 setwd("/Users/Daniel/Desktop")
 data <- read.csv("student-class-blackbaud-input_2000-2019.csv")
 
@@ -132,12 +137,43 @@ for (i in 2000:2019) {
 }
 
 
+#### MEDIAN YEARS OF EDUCATION OVER TIME ####
+median_edu_sem <- data %>% filter(!is.na(education_years)) %>%
+                      group_by(year, semester) %>% 
+                      summarize(med_edu = median(education_years))
+
+ggplot(median_edu_sem, aes(x=year, y=med_edu)) + geom_point(shape=21, fill="orange") +
+      geom_smooth(method="loess", span=.95, color="orange") 
+
+
+#### CHOROPLETH MAP OF STUDENTS BY ZIP CODE ####
+#Can do this in Tableau as well, but good exercise
+#to be able to make static maps as well as interactive ones
+
+#https://guides.library.duke.edu/c.php?g=922782&p=6651545
+#https://bookdown.org/robinlovelace/geocompr/spatial-class.html
+#http://geog.uoregon.edu/bartlein/courses/geog495/lec07.html 
+
+theme_set(theme_bw())
+
+world <- ne_countries(scale="medium", returnclass = "sf")
+#class(world)
+
+#Base map of the world
+ggplot(world) + geom_sf()
+
+#By maps package
+map("state")
+map("county")
+
+states <- st_as_sf(map("state", plot=FALSE, fill=TRUE))
+
+ggplot(states) + geom_sf()
 
 
 #Diverging - gradient with at least two hues
 #Qualitative - apples vs oranges vs bananas
 #Sequential - gradient with one dominant hue
-
 
 #Displays individual palette
 display.brewer.pal(6, "Oranges")
