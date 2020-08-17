@@ -2,6 +2,10 @@ library(ggplot2)
 library(dplyr)
 library(forcats)
 library(RColorBrewer)
+library(ggthemes)
+#devtools::install_github("bbc/bbplot")
+library(bbplot)
+
 
 setwd("/Users/Daniel/Desktop")
 data <- read.csv("student-class-blackbaud-input_2000-2019.csv")
@@ -15,10 +19,21 @@ glimpse(data)
 #Each row is a unique student which is why just doing n() in summarize gives us that number
 student_count <- data %>% group_by(semester, year) %>% summarize(num_students=n())
 seasons <- c("#4E79A7", "#59A14F", "#EDC948","#F28E2B")
-ggplot(data=student_count, aes(x=year, y=num_students, fill=semester)) + geom_point(shape=21, size=2) +
-  facet_grid(.~ semester) + stat_smooth(method="loess", span=.95, color="#76B7B2") +
-  scale_fill_manual("Semester", values=seasons)
 
+A <- ggplot(data=student_count, aes(x=year, y=num_students, fill=semester)) + geom_point(shape=21, size=2) +
+        facet_grid(.~ semester) + stat_smooth(method="loess", span=.95, color="#76B7B2") +
+        scale_fill_manual("Semester", values=seasons) +
+        scale_x_continuous(breaks=c(2000,2005,2010,2015,2019)) +
+        ylim(0,1050) +
+        labs(title="Number of Students by Semester Over Time",subtitle = "2000-2019",
+        x="Year", y="Number of Students") + theme_stata() +
+        theme(panel.spacing = unit(5, "mm"),
+              axis.text.x = element_text(angle = 30),
+                                            #trouble = Top, Right, Bottom, Left
+              axis.title.y = element_text(margin = unit(c(0,5,0,0),"mm")))
+A
+#.5 is the default for vjust and hjust
+#Theme changes have to come after external theme to come through
 
 #### TOTAL NUMBER OF MALE AND FEMALE STUDENTS BY SEASON OVER TIME ####
 #count(data, vars=gender)
@@ -27,11 +42,17 @@ gender_ratio <- data %>% filter(!is.na(gender)) %>% group_by(semester, year, gen
                       
 gender_colors <- c("red", "blue")
 
-ggplot(data=gender_ratio, aes(x=year, y=num_gender, fill=gender)) + geom_point(shape=21, alpha=.8, color='black') +
-  stat_smooth(method = "loess", span = .95, se=TRUE, alpha=.3) + facet_grid(.~semester) +
-       scale_color_manual("Gender", values=gender_colors) 
+B <- ggplot(data=gender_ratio, aes(x=year, y=num_gender, fill=gender)) + geom_point(shape=21, alpha=.8, color='black') +
+          stat_smooth(method = "loess", span = .95, se=TRUE, alpha=.3) + facet_grid(.~semester) +
+          scale_color_manual("Gender", values=gender_colors) +
+          scale_x_continuous(breaks=c(2000,2005,2010,2015,2019)) +
+          labs(title="Student Gender Ratio By Semester Over Time",
+               x="Year", y="Number of Students",fill="Gender", subtitle="2000-2019") + theme_stata() +
+          theme(panel.spacing = unit(4, "mm"),
+                axis.text.x = element_text(angle=30))
+          #+ bbc_style()
 
-#Add in title, clean axis labels and add in more ticks
+B
 
 # # Bar graph of gender over time - not the best way but interesting to make
 # ggplot(data=gender_ratio, aes(x=gender, y=num_gender, fill=gender)) + geom_col() +
@@ -51,20 +72,42 @@ ggplot(data=gender_ratio, aes(x=year, y=num_gender, fill=gender)) + geom_point(s
 #Warning of removing non-finite values refers to NA values excluded - no worries
 
 #Basic histogram with counts of students by age
-ggplot(data=data, aes(x=age)) + 
-  geom_histogram(bins = 40, color='black', fill='lightgreen') +
-  facet_wrap(.~semester) #semester~year to get every case
+C1 <- ggplot(data=data, aes(x=age)) + 
+          geom_histogram(bins = 40, color='black', fill='lightgreen') +
+          facet_wrap(.~semester) + #semester~year to get every case
+          theme_stata() +
+          labs(title="Student Age Distribution ", x="Age", y="Number of Students") +
+          theme(axis.title.y = element_text(margin = unit(c(0,4,0,0), "mm")))
+C1
 
 #Density histogram
 # Without year as factor it colors by intensity - categorical vs numeric 
-ggplot(data=data, aes(x=age, fill=factor(year))) + 
-  geom_histogram(aes(y=..density..), bins=20, color='black') + 
-  facet_wrap(.~year) #+ geom_density()
+C2 <- ggplot(data=data, aes(x=age, fill=factor(year))) + 
+        geom_histogram(aes(y=..density..), bins=20, color='black') + 
+        facet_wrap(.~year) + #+ geom_density()
+        scale_y_continuous(breaks=c(0, 0.025, 0.05)) +
+        theme_stata() +
+        labs(title="Percentage Distribution of Student Age Over Time",
+             subtitle="2000-2019", x="Age", y="Percent of Student Population",
+             fill="Year") +
+        theme(axis.title.y = element_text(margin = unit(c(0,5,0,0), "mm")),
+              axis.text.y = element_text(angle = 0),
+              panel.spacing.y = unit(5, "mm"))
+
+C3
 
 #Clearer density plot with area under the curve
-ggplot(data=data, aes(x=age)) + geom_density(fill="lightblue", alpha=.3) + 
-      facet_wrap(.~year)
+C4 <- ggplot(data=data, aes(x=age)) + geom_density(fill="lightblue", alpha=.3) + 
+        facet_wrap(.~year, scales = "free_x") + theme_stata() +
+        labs(title="Percentage Distribution of Student Age Over Time",
+              subtitle="2000-2019", x="Age", y="Percent of Student Population",
+              fill="Year") +
+        theme(axis.title.y = element_text(margin = unit(c(0,5,0,0), "mm")),
+              axis.text.y = element_text(angle = 0),
+              panel.spacing.y = unit(5, "mm"))
 
+
+C4
 
 #### MEDIAN AGE OVER TIME ####
 
@@ -72,8 +115,18 @@ ggplot(data=data, aes(x=age)) + geom_density(fill="lightblue", alpha=.3) +
 median_age_sem <- data %>% group_by(semester, year) %>% filter(!is.na(age)) %>%
   summarize(med_age=median(age, na.rm = TRUE))
 
-ggplot(data=median_age_sem, aes(x=year, y=med_age)) + geom_point(shape=21, fill="#56B4E9") + 
-    facet_grid(.~semester) + stat_smooth(method = "loess", span=.95)
+D <- ggplot(data=median_age_sem, aes(x=year, y=med_age)) + geom_point(shape=21, fill="#56B4E9") + 
+        facet_grid(.~semester) + stat_smooth(method = "loess", span=.95) +
+        theme_stata() +
+        scale_x_continuous(breaks = c(2000,2005,2010,2015,2019)) +
+  labs(title="Median Student Age Over Time",
+       subtitle="2000-2019", x="Year", y="Age",fill="Year") +
+  theme(axis.title.y = element_text(margin = unit(c(0,5,0,0), "mm")),
+        panel.spacing = unit(5, "mm"),
+        axis.text.x = element_text(angle=30))
+
+
+D
 
 #Year Average
 median_age_year <- data %>% group_by(year) %>% filter(!is.na(age)) %>%

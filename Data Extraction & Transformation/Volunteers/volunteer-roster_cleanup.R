@@ -20,6 +20,35 @@ roster_files <- str_subset(files, pattern = "AUTOSAVED|BOOK|CANDIDATES|COPY|DO N
                                              |POTENTIAL|RETURNING|SHOW|SIGN|SUB|TECH|RETURNING|
                                              |TRAINING|TUTOR|\\~|\\(1\\)", negate = TRUE)
 
+
+# for (roster in roster_files) {
+#   
+#   #Better way is to simply combine sheets to avoid messy workbook issues
+#   #Need to use "function (x)" to be able to set parameters of read_excel
+#   #Doing this makes it unnecessary to put "path = roster" for the second argument of map()
+#   #We also want to filter out unnecessary sheets 
+#   
+#   print(roster)
+#   
+#   #Can also just use str_subset again but converting to dataframe is another valid method
+#   raw <- roster %>% excel_sheets() %>% as.data.frame(.) %>% 
+#     filter(., !str_detect(., pattern = "New|NEW|new|Retention|Gala|Email|applicants|All Vol|
+#                                                 |Outreach|To Contact|VOAs|Waiting|Tutors|TUTORS|Job|DO NOT||
+#                                                 |External|Subs|Office|Using|Deloitte|Cars|Owed|Return|St Mary|
+#                                                 |Teacher|Salsa|Potential|Help|Lesson|Candidates|Teams" )) %>%
+#     map(function (x) read_excel(path = roster, skip = 1, col_types = "text")) %>% 
+#     bind_rows() %>% compact()
+#   
+# 
+# 
+# 
+# 
+# 
+
+
+
+
+
 #str_subset is a wrapper around files[str_detect(files, pattern = "Log")]
 
 #This also works#Keep takes in list and a function to apply as a filter
@@ -350,9 +379,14 @@ col1_contents <- unique(df$class_name)
 
 df_final <- df %>% select(c("class_name":"year"))
 
+
 write.csv(df_final, "for-now_volunteer-roster_2006-2019.csv", row.names = FALSE)
 
+#View(roster_files)
+
+
 #Will check and fill in the rest with excel - just too much variation and issues
+
 
 
 

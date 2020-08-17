@@ -5,6 +5,8 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(maps)
 library(RColorBrewer)
+library(leaflet)
+
 
 setwd("/Users/Daniel/Desktop")
 data <- read.csv("student-class-blackbaud-input_2000-2019.csv")
@@ -35,10 +37,11 @@ plot_data <- left_join(world, country_data, by=c("name" = "country"))
 
 plot_data <- plot_data %>% select(name, count, geometry)
 
-
+#Chloropleth of Country Total
 ggplot(plot_data) + geom_sf(aes(fill=count)) + coord_sf() +
   scale_fill_gradient(low="lightblue", high="blue", 
-                      na.value="white")
+                      na.value="white", limits=c(10,4000),
+                      breaks=c(seq(100,5000, 300)))
 
 
 
@@ -52,9 +55,9 @@ states <- st_as_sf(map("state", plot=FALSE, fill=TRUE))
 ggplot(states) + geom_sf() #+ coord_sf(xlim=c(-80,-70), ylim =c(38.5, 39), expand=FALSE)
 
 
+map_1 <- leaflet() %>% addTiles() %>% addMarkers(lat=38.915645,lng=-77.0512195)
 
-
-
+map_1
 
 
 
