@@ -5,6 +5,7 @@ library(readxl)
 library(purrr)
 library(tidyr)
 
+#https://martinctc.github.io/blog/vignette-write-and-read-multiple-excel-files-with-purrr/
 setwd("/Users/Daniel/Desktop/volunteer-files/")
 
 ##### CREATING DATAFRAME FOR ALL YEARS #####
@@ -12,40 +13,28 @@ setwd("/Users/Daniel/Desktop/volunteer-files/")
 #Reading in files and standardizing capitalization
 files <- str_to_upper(list.files(pattern = "*.xls*", recursive=TRUE))
 
-## This code focuses on CORE, SCHEDULED TEACHER ROSTERS
-## Other code will look at subs, tutors, etc.
-
 #We are filtering out the workbooks that are not of use to us
 roster_files <- str_subset(files, pattern = "AUTOSAVED|BOOK|CANDIDATES|COPY|DO NOT USE|EMAIL|LIST|LOG|OLD|
                                              |POTENTIAL|RETURNING|SHOW|SIGN|SUB|TECH|RETURNING|
                                              |TRAINING|TUTOR|\\~|\\(1\\)", negate = TRUE)
 
 
-# for (roster in roster_files) {
-#   
-#   #Better way is to simply combine sheets to avoid messy workbook issues
-#   #Need to use "function (x)" to be able to set parameters of read_excel
-#   #Doing this makes it unnecessary to put "path = roster" for the second argument of map()
-#   #We also want to filter out unnecessary sheets 
-#   
-#   print(roster)
-#   
-#   #Can also just use str_subset again but converting to dataframe is another valid method
-#   raw <- roster %>% excel_sheets() %>% as.data.frame(.) %>% 
-#     filter(., !str_detect(., pattern = "New|NEW|new|Retention|Gala|Email|applicants|All Vol|
-#                                                 |Outreach|To Contact|VOAs|Waiting|Tutors|TUTORS|Job|DO NOT||
-#                                                 |External|Subs|Office|Using|Deloitte|Cars|Owed|Return|St Mary|
-#                                                 |Teacher|Salsa|Potential|Help|Lesson|Candidates|Teams" )) %>%
-#     map(function (x) read_excel(path = roster, skip = 1, col_types = "text")) %>% 
-#     bind_rows() %>% compact()
-#   
-# 
-# 
-# 
-# 
-# 
+df_files <- as.data.frame(roster_files)
+
+#Adding in path to each file as it is needed to get all sheets using excel_sheets()
+df_files <- df_files %>% mutate(base_path = "/Users/Daniel/Desktop/volunteer-files/",
+                                file_path = paste0(base_path, roster_files))
 
 
+for (path in df_files$file_path){
+  
+  print(path %>% excel_sheets())
+}
+
+map(df_files$file_path, excel_sheets(.))
+
+## This code focuses on CORE, SCHEDULED TEACHER ROSTERS
+## Other code will look at subs, tutors, etc.
 
 
 
@@ -55,24 +44,29 @@ roster_files <- str_subset(files, pattern = "AUTOSAVED|BOOK|CANDIDATES|COPY|DO N
 #roster_files <- files %>% keep(., str_detect(files, pattern = "List|Log|
                                     #|Potential|Show|Sign|sign|Training|Tutor", negate = TRUE))
 
-for (roster in roster_files) {
 
   #Better way is to simply combine sheets to avoid messy workbook issues
   #Need to use "function (x)" to be able to set parameters of read_excel
   #Doing this makes it unnecessary to put "path = roster" for the second argument of map()
   #We also want to filter out unnecessary sheets 
+
   
-  print(roster)
+  
   
   #Can also just use str_subset again but converting to dataframe is another valid method
-  raw <- roster %>% excel_sheets() %>% as.data.frame(.) %>% 
+  raw <- roster %>% excel_sheets() %>% as.data.frame() 
+  
+  
+  
+  
+ 
                     filter(., !str_detect(., pattern = "New|NEW|new|Retention|Gala|Email|applicants|All Vol|
                                                 |Outreach|To Contact|VOAs|Waiting|Tutors|TUTORS|Job|DO NOT||
-                                                |External|Subs|Office|Using|Deloitte|Cars|Owed|Return|St Mary|
+                                                |External|Subs|Office|Using|Deloitte|Cars|Owed|Return|
                                                 |Teacher|Salsa|Potential|Help|Lesson|Candidates|Teams" )) %>%
-                    map(function (x) read_excel(path = roster, skip = 1, col_types = "text")) %>% 
+                    map(function (x) read_excel(path = roster, skip = 1, col_types = "text")) %>%
                     bind_rows() %>% compact()
-  
+
   
   #Skips empty workbook cases
   if (nrow(raw) == 0) {
