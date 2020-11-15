@@ -9,7 +9,7 @@ setwd("/Users/Daniel/Desktop/volunteer-files/Data")
 # as to how things should be, and then take care of the rest automatically. There was just way too much 
 # variation and unclear recording practices from a machine-readable standpoint to try to do it all with code.
 
-df <- read.csv('teachers_historical.csv', stringsAsFactors = FALSE)
+df <- read.csv('teachers_historical_1114.csv', stringsAsFactors = FALSE)
   
 #Replacing blank strings with NA
 df <- df %>% mutate(across(everything(), ~na_if(., "")))
@@ -22,7 +22,7 @@ df <- df %>% mutate(across(everything(), ~na_if(., "")))
 df <- df %>% filter(!is.na(name_1))
 
 #Filling in semester and year data
-df <- df %>% fill(c(day,semester, year), .direction ='down')
+df <- df %>% fill(c(day,semester, year, class), .direction ='down')
 
 #Separate out 2019 & 2020 data to combine two name columns into one
 df_19 <- df %>% filter(year >= 2019)
@@ -35,23 +35,56 @@ df_19 <- df_19 %>% rename(email_final=email, phone_1=phone)
 #Bringing it back together
 df <- bind_rows(df_rest, df_19)
 
-#Combining two columns into one (same as pd.combine_first from python)
-df <- df %>% mutate(final_phone = coalesce(phone_1, phone_2)) %>% select(-c(phone_1,phone_2))
+#View(df %>% filter(!is.na(phone_1) & !is.na(phone_2)))
 
+#Combining two columns into one (same as pd.combine_first from python)
+df <- df %>% mutate(phone = coalesce(phone_1, phone_2), .before=semester) %>% 
+             select(-c(phone_1,phone_2)) %>% rename(email=email_final)
+
+
+#For indicator of new volunteer, newer years started using color or 
+#bold type to indicate new volunteer rather than star, so had to go 
+#through manually to add *. Not 100% positive on all cases but will 
+#definitely be a closer tracker. Put together presentation to data collection
+#team about certain best practices that will help minimize extra work
+
+#I went through all years but seems like SUMMER 2013 is where stars stopped
+#*Name -> already in spreadsheet
+#Name* -> I manually added in to google spreadsheet
+
+#Make sure that teacher names in Title Case
 
 
 #Use str_detect, if punctuation at very beginning of col3 (so *), add YES
 #To give idea of percentage new teacher vs returner
-df <- df %>% mutate(new_volunteer = case_when(str_detect(teacher_name, pattern = "\\*") ~ "Yes",TRUE ~ 'No'),
-                    teacher_name = str_replace_all(teacher_name, pattern = "\\*", replacement = ""))
-
+df <- df %>% mutate(new_volunteer = case_when(str_detect(name, pattern = "\\*") ~ "Yes", TRUE ~ 'No'), 
+                    .before=semester, name = str_replace_all(name, pattern = "\\*", replacement = ""))
 
 
 #Make sure no extra spaces - using new across method
-df <- df %>% mutate(across(everything(), ~str_trim(.)))
 df <- df %>% mutate(across(everything(), ~str_squish(.)))
 
+#Format names
+#df <- df %>% mutate(across(c(name, day), ~str_to_upper(.)))
+
+df <- df %>% mutate(name = str_to_upper(name), 
+                    day = str_to_title(day),
+                    email = str_to_lower(email))
 
 #Dropping duplicate rows
 nrow(df)
-#df <- distinct(df)
+
+#How to view duplicate rows
+View(df %>% add_count(name, year, semester, class, day) %>% filter (n>1))
+
+#Summer 2009 had weird way of listing people multiple times which is why
+#there were a few dozen duplicates - other than that, all unique.
+df <- distinct(df)
+
+#Count of volunteers helping out the most
+df_GOAT <- df %>% count(name)
+
+df_2019 <- df %>% filter(year == 2019) %>% count(name)
+#Adds column (mutate)
+df_test <- df %>% add_count(name)
+
