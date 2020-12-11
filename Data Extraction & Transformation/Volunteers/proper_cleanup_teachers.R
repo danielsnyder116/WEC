@@ -81,10 +81,6 @@ View(df %>% add_count(name, year, semester, class, day) %>% filter (n>1))
 #there were a few dozen duplicates - other than that, all unique.
 df <- distinct(df)
 
-#Count of volunteers helping out the most
-df_GOAT <- df %>% count(name)
+df <- df %>% mutate(category='teacher', .before=class)
 
-df_2019 <- df %>% filter(year == 2019) %>% count(name)
-#Adds column (mutate)
-df_test <- df %>% add_count(name)
-
+write.csv(df, "All WEC Teacher Volunteers 2006 to Fall 2020.csv", row.names=FALSE)
