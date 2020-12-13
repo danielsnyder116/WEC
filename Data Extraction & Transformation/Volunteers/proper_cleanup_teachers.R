@@ -2,14 +2,14 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 
-setwd("/Users/Daniel/Desktop/volunteer-files/Data")
+setwd("/Users/Daniel/Desktop/volunteer-files/Data/other")
 
 #LESSON LEARNED: Sometimes, rather than trying to clean a bunch of messy data sets from start to finish using code, 
 # it can be much more efficient to do the basic binning of relevant information manually with human knowledge
 # as to how things should be, and then take care of the rest automatically. There was just way too much 
 # variation and unclear recording practices from a machine-readable standpoint to try to do it all with code.
 
-df <- read.csv('teachers_historical_1114.csv', stringsAsFactors = FALSE)
+df <- read.csv('teachers_historical_1212.csv', stringsAsFactors = FALSE)
   
 #Replacing blank strings with NA
 df <- df %>% mutate(across(everything(), ~na_if(., "")))
