@@ -2,7 +2,7 @@ library(dplyr)
 library(stringr)
 library(readxl)
 
-setwd("/Users/Daniel/Desktop/volunteer-files/")
+setwd("/Users/Daniel/Desktop/Data")
 
 #Gets all the excel files and deals with folders - 318
 files <- as.data.frame(list.files(pattern = "*.xls*", recursive=TRUE), stringsAsFactors = FALSE)

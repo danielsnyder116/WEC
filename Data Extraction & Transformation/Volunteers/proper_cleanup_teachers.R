@@ -2,7 +2,7 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 
-setwd("/Users/Daniel/Desktop/volunteer-files/Data/other")
+setwd("/Users/Daniel/Desktop/Data/other")
 
 #LESSON LEARNED: Sometimes, rather than trying to clean a bunch of messy data sets from start to finish using code, 
 # it can be much more efficient to do the basic binning of relevant information manually with human knowledge

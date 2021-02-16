@@ -2,7 +2,7 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 
-setwd("/Users/Daniel/Desktop/volunteer-files/Data/other")
+setwd("/Users/Daniel/Desktop/Data/other")
 files <- list.files(pattern = '*.csv')
 
 file <- files[3]
