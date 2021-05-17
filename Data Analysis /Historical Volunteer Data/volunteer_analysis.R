@@ -4,7 +4,7 @@ library(tidyr)
 library(ggplot2)
 
 #====================================
-#           Analysis Part 
+#           Analysis Part z
 #===================================
 
 setwd("/Users/Daniel/Desktop/Data/Volunteer Historical Data/output")
@@ -14,9 +14,12 @@ df_current <- read.csv("All WEC Volunteers Winter 2021.csv", stringsAsFactors = 
 
 df <- bind_rows(df_history, df_current)
 
+#df_calcerano <- df %>% filter(str_detect(name, pattern='CALCERANO')) %>% arrange(desc(year))
+#write.csv(df_calcerano, "Kathleen_Calcerano_Volunteer_Summary.csv", row.names = FALSE)
+
 
 #Count of volunteers helping out the most over all years - SIMPLE
-df_all_time <- df %>% filter(year >= 2016) %>%
+df_all_time <- df %>% #filter(year >= 2016) %>%
                   count(name) %>% arrange(., desc(n))
 
 #Adds column (equivalent of using mutate)
