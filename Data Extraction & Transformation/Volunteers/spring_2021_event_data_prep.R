@@ -8,112 +8,118 @@ setwd("/Users/Daniel/Desktop")
 #-------------------------------
 # STUDENT DATA
 #-------------------------------
+# 
+# #Bring in blackbaud student data (2020-06 - PRESENT)
+# df_bb <- read.csv("bb_student_export_2021-05-15.csv", stringsAsFactors = FALSE)
+# 
+# #Getting rid of columns we ended up not needing
+# df_bb <- df_bb %>% select(-c(Graduation.year, Province, Created.on)) %>% 
+#                    rename(name = Student.summary, address = Home.address,
+#                           enroll_date = Enroll.date, city = City, 
+#                           state = State, zip_code = Postal.zip,
+#                           country = Country )
+# 
+# n_distinct(df_bb$name)
+# 
+# 
+# #Bringing in google sheets data
+# #-----------------------------------------------------------------------------
+# df_gs_1 <- read.csv("gs_tutoring_2020-08.csv", stringsAsFactors = FALSE)
+# df_gs_2 <- read.csv("gs_tutoring_2020-08_more.csv", stringsAsFactors = FALSE)
+# 
+# #Concatenating files and getting relevant columns
+# df_gs <- as_tibble(bind_rows(df_gs_1, df_gs_2)) %>% select(c("Last.Name..Apellido",                                                                                                                                                                                                                
+#                                                              "First.Name..Primer.Nombre",                                                                                                                                                                                                          
+#                                                              "Street.Address..Dirección",                                                                                                                                                                                                          
+#                                                              "City..State..Zip.Code.Country..Ciudad..Estado..Código..postal..País.",                                                                                                                                                              
+#                                                              "Country.of.Origin..País.de.Nacimiento"))
+# 
+# names(df_gs) <- c("last_name", "first_name", "address", "location", "country")
+# 
+# df_gs <- df_gs %>% mutate(name = paste(first_name, last_name)) %>% 
+#                    select(-c(last_name, first_name)) %>%
+#                    select(name, everything())
+# 
+# 
+# #Payment data without country info
+# #-----------------------------------------------------------------------------
+# df_pmt_1 <- read.csv("spring_2020_payment_info.csv") %>% select(c("Last.Name","First.Name",
+#                                                                   "Date.added.to.Proactive",
+#                                                                   "Course", "Returning.Student." )) %>% 
+#                                                          mutate(country = NA_character_)
+# 
+# names(df_pmt_1) <- c("last_name", "first_name", "enroll_date", "course", "returning_student", "country")
+# 
+# df_pmt_1 <- df_pmt_1 %>% mutate(name=paste(first_name, last_name)) %>% 
+#                          select(-c(last_name, first_name)) %>%
+#                          select(name, everything())  %>% 
+#                          distinct(name, .keep_all = TRUE)
+# 
+# df_pmt_2 <- read.csv("spring_2020_payment_second_file.csv") %>% select(c("Last.Name","First.Name",
+#                                                                          "Registration.Date",
+#                                                                          "Course" )) %>% 
+#                                                                 mutate(returning_student = NA_character_,
+#                                                                        country = NA_character_)
+# 
+# names(df_pmt_2) <- c("last_name", "first_name", "enroll_date", "course", "returning_student", "country")
+# 
+# df_pmt_2 <- df_pmt_2 %>% mutate(name=paste(first_name, last_name)) %>% 
+#                          select(-c(last_name, first_name)) %>%
+#                          select(name, everything()) %>% 
+#                          distinct(name, .keep_all = TRUE)
+# 
+# df_pmt <- as_tibble(bind_rows(df_pmt_1, df_pmt_2)) %>% 
+#               distinct(name, .keep_all = TRUE)
+# 
+# 
+# 
+# #Bringing it all together
+# #-----------------------------------------------------------------------------
+# 
+# df_all <- as_tibble(bind_rows(df_bb, df_gs, df_pmt)) %>% mutate(name = str_to_upper(name)) %>%
+#                     distinct(name, .keep_all = TRUE)
+# 
+# nrow(df_all)
+# 
+# 
+# #Trying to bring in more country information for previous students
+# #Improves it by about 10%, around 120 students out of 800
+# 
+# df_dem <- read.csv("2000-2019_student-demographics.csv", stringsAsFactors = FALSE) %>% 
+#                     mutate(name = str_to_upper(paste(first_name, last_name))) %>%
+#                     select(-c(first_name, last_name, zip_code)) %>%
+#                     select(name, everything()) %>% distinct(name, .keep_all = TRUE)
+# 
+# glimpse(df_dem)
+# df_better <- left_join(df_all, df_dem, by=c("name")) %>% 
+#                 mutate(country = case_when(country.x %in% c("United States", "", NA_character_) &
+#                                               !is.na(country.y) ~ country.y,
+#                                            TRUE ~ country.x)) %>% 
+#                 select(name, address, enroll_date, city, 
+#                        state, zip_code, country, location,
+#                        course, returning_student) %>% filter(name != "TEST STUDENT")
+# 
+# 
+# 
+# 
+# #Calculating Number of Students by COUNTRY
+# #-----------------------------------------------------------------------------
+# df_stats <- df_better %>% mutate(country = str_squish(case_when(str_detect(country, "Bolivia, Plurinational St") ~ "Bolivia",
+#                                                                 str_detect(country, "Georgeia") ~"Georgia",
+#                                                                 str_detect(country, "Russian Federation") ~ "Russia",
+#                                                                 str_detect(country, "Korea, Republic of") ~ "South Korea",
+#                                                                 str_detect(country, "Venezuela, Bolivarian Rep") ~ "Venezuela",
+#                                                                 country == "" ~ NA_character_,
+#                                                                 TRUE ~ country))) 
+# 
+# 
+# 
+# #write.csv(df_stats, "virtual-students_locations.csv", row.names = FALSE)
+# openxlsx::write.xlsx(df_stats, "virtual-students_locations.xlsx", row.names = FALSE)
 
-#Bring in blackbaud student data (2020-06 - PRESENT)
-df_bb <- read.csv("bb_student_export_2021-05-15.csv", stringsAsFactors = FALSE)
-
-#Getting rid of columns we ended up not needing
-df_bb <- df_bb %>% select(-c(Graduation.year, Province, Created.on)) %>% 
-                   rename(name = Student.summary, address = Home.address,
-                          enroll_date = Enroll.date, city = City, 
-                          state = State, zip_code = Postal.zip,
-                          country = Country )
-
-n_distinct(df_bb$name)
 
 
-#Bringing in google sheets data
-#-----------------------------------------------------------------------------
-df_gs_1 <- read.csv("gs_tutoring_2020-08.csv", stringsAsFactors = FALSE)
-df_gs_2 <- read.csv("gs_tutoring_2020-08_more.csv", stringsAsFactors = FALSE)
-
-#Concatenating files and getting relevant columns
-df_gs <- as_tibble(bind_rows(df_gs_1, df_gs_2)) %>% select(c("Last.Name..Apellido",                                                                                                                                                                                                                
-                                                             "First.Name..Primer.Nombre",                                                                                                                                                                                                          
-                                                             "Street.Address..Dirección",                                                                                                                                                                                                          
-                                                             "City..State..Zip.Code.Country..Ciudad..Estado..Código..postal..País.",                                                                                                                                                              
-                                                             "Country.of.Origin..País.de.Nacimiento"))
-
-names(df_gs) <- c("last_name", "first_name", "address", "location", "country")
-
-df_gs <- df_gs %>% mutate(name = paste(first_name, last_name)) %>% 
-                   select(-c(last_name, first_name)) %>%
-                   select(name, everything())
-
-
-#Payment data without country info
-#-----------------------------------------------------------------------------
-df_pmt_1 <- read.csv("spring_2020_payment_info.csv") %>% select(c("Last.Name","First.Name",
-                                                                  "Date.added.to.Proactive",
-                                                                  "Course", "Returning.Student." )) %>% 
-                                                         mutate(country = NA_character_)
-
-names(df_pmt_1) <- c("last_name", "first_name", "enroll_date", "course", "returning_student", "country")
-
-df_pmt_1 <- df_pmt_1 %>% mutate(name=paste(first_name, last_name)) %>% 
-                         select(-c(last_name, first_name)) %>%
-                         select(name, everything())  %>% 
-                         distinct(name, .keep_all = TRUE)
-
-df_pmt_2 <- read.csv("spring_2020_payment_second_file.csv") %>% select(c("Last.Name","First.Name",
-                                                                         "Registration.Date",
-                                                                         "Course" )) %>% 
-                                                                mutate(returning_student = NA_character_,
-                                                                       country = NA_character_)
-
-names(df_pmt_2) <- c("last_name", "first_name", "enroll_date", "course", "returning_student", "country")
-
-df_pmt_2 <- df_pmt_2 %>% mutate(name=paste(first_name, last_name)) %>% 
-                         select(-c(last_name, first_name)) %>%
-                         select(name, everything()) %>% 
-                         distinct(name, .keep_all = TRUE)
-
-df_pmt <- as_tibble(bind_rows(df_pmt_1, df_pmt_2)) %>% 
-              distinct(name, .keep_all = TRUE)
-
-
-
-#Bringing it all together
-#-----------------------------------------------------------------------------
-
-df_all <- as_tibble(bind_rows(df_bb, df_gs, df_pmt)) %>% mutate(name = str_to_upper(name)) %>%
-                    distinct(name, .keep_all = TRUE)
-
-nrow(df_all)
-
-
-#Trying to bring in more country information for previous students
-#Improves it by about 10%, around 120 students out of 800
-
-df_dem <- read.csv("2000-2019_student-demographics.csv", stringsAsFactors = FALSE) %>% 
-                    mutate(name = str_to_upper(paste(first_name, last_name))) %>%
-                    select(-c(first_name, last_name, zip_code)) %>%
-                    select(name, everything()) %>% distinct(name, .keep_all = TRUE)
-
-glimpse(df_dem)
-df_better <- left_join(df_all, df_dem, by=c("name")) %>% 
-                mutate(country = case_when(country.x %in% c("United States", "", NA_character_) &
-                                              !is.na(country.y) ~ country.y,
-                                           TRUE ~ country.x)) %>% 
-                select(name, address, enroll_date, city, 
-                       state, zip_code, country, location,
-                       course, returning_student) %>% filter(name != "TEST STUDENT")
-
-
-
-
-#Calculating Number of Students by COUNTRY
-#-----------------------------------------------------------------------------
-df_stats <- df_better %>% mutate(country = str_squish(case_when(str_detect(country, "Bolivia, Plurinational St") ~ "Bolivia",
-                                                                str_detect(country, "Georgeia") ~"Georgia",
-                                                                str_detect(country, "Russian Federation") ~ "Russia",
-                                                                str_detect(country, "Korea, Republic of") ~ "South Korea",
-                                                                str_detect(country, "Venezuela, Bolivarian Rep") ~ "Venezuela",
-                                                                country == "" ~ NA_character_,
-                                                                TRUE ~ country))) 
-
-#write.csv(df_stats, "virtual-students_locations.csv", row.names = FALSE)
-openxlsx::write.xlsx(df_stats, "virtual-students_locations.xlsx", row.names = FALSE)
+df_stats <- read_excel("virtual-students_locations.xlsx")
 
 #Since March 2020 we have had students from at least 43 countries (lots of unknowns)
 student_countries <- df_stats %>% group_by(country) %>%
@@ -124,6 +130,19 @@ student_states <- df_stats %>% group_by(state) %>%
                                summarize(n_students = n()) %>%
                                arrange(desc(n_students)) 
 
+#Uncount from tidyr generates rows by count number - perfect for Tableau
+counts_by_city <- df_stats %>% group_by(city, zip_code, state, country) %>%
+                               summarize(n_students = n()) %>%
+                               arrange(desc(n_students)) %>% uncount(n_students) %>%
+                               mutate(city = str_replace(city, "do norte", "do Norte")) %>%
+                               filter(city != "20008") %>%
+                               drop_na(city) 
+
+openxlsx::write.xlsx(counts_by_city, "student_counts_by_city_final.xlsx", row.names = FALSE)
+
+counts_by_zip_code <- df_stats %>% group_by(zip_code) %>%
+                                   summarize(n_students = n()) %>%
+                                   arrange(desc(n_students))
 
 #-------------------------------------------------------------------------------------------------------
 #------------------------------------
