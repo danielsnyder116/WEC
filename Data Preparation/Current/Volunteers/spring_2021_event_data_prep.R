@@ -2,6 +2,8 @@ library(dplyr)
 library(stringr)
 library(readxl)
 library(tidyr)
+library(lubridate)
+
 
 setwd("/Users/Daniel/Desktop")
 #-------------------------------------------------------------------------------------------------------
@@ -118,8 +120,17 @@ setwd("/Users/Daniel/Desktop")
 # openxlsx::write.xlsx(df_stats, "virtual-students_locations.xlsx", row.names = FALSE)
 
 
-
 df_stats <- read_excel("virtual-students_locations.xlsx")
+
+#Clean Dates
+df_stats <- df_stats %>% mutate(enroll_date = parse_date_time(enroll_date, c("Ymd", "dmY", "dmy","dmyHMS"))) %>% 
+                         select(-c("location", "course", "returning_student")) %>%
+                         mutate(enroll_date = str_squish(str_trunc(as.character(enroll_date), 10,
+                                                        side=c("right"), ellipsis = "")),
+                                id = seq(1:nrow(df_stats))) %>%
+                         select(id, city, state, zip_code, country, enroll_date)
+
+write.csv(df_stats, "all_wec_student_locations_deidentified_2020-03_2021-04.csv", row.names=FALSE)
 
 #Since March 2020 we have had students from at least 43 countries (lots of unknowns)
 student_countries <- df_stats %>% group_by(country) %>%
@@ -279,16 +290,14 @@ faithful_vols <- inner_join(df_pre, df_pan, by = c("name"))
 
 #3.5 hours
 
-#7 hours total
 
+#Monday
+#8:05 - 10:35 = 2.5
+#10:40 - 11:30 = .75 
+#11:50 - 12:45 = 1 
 
+#4.25 hours 
 
-
-
-
-
-
-
-
-
+#7.5 hours charged
+#4.25 v
 
