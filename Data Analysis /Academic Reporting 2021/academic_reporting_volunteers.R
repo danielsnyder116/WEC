@@ -18,7 +18,6 @@
 
 #-------------------------------
 
-
 #Bring in all volunteer data 
 
 library(dplyr)
@@ -39,54 +38,61 @@ setwd("/Users/Daniel/Desktop/WEC/Data/All (2006 - Present)")
 df <- read.csv("all_volunteers_2006_2021_final.csv", stringsAsFactors = FALSE) %>% 
                 mutate(semester=factor(semester, levels = c("WINTER", "SPRING", "SUMMER", "FALL")))
 
+#---------------------------------------#
+#---------- UNIQUE VOLUNTEERS ----------#
+#---------------------------------------#
+
 #Isolate columns that reveal duplicates 
 #(teachers doing more than one class or day within one semester and year)
-#------------------------------------------------------------------------
-#Group by year only for total
-df_year <- df %>% select(c(name, semester, year)) %>% distinct() %>% 
-            count (year) %>% rename(num_unique_volunteers = n)
 
-#2006 - 2021 Average: 828
+#DATA SOURCE
+#------------------------------------------------------------------------
+df_unique_vols <- df %>% select(c(name, semester, year)) %>% distinct()
+
+#BY YEAR
+#----------------------------------------------
+#Group by year only for total
+df_year <- df_unique_vols %>% count(year) %>% rename(num_unique_volunteers = n)
+
+#2006-2021 Average: 828
 all_avg_volunteers_per_year <- df_year %>% filter(year < 2021) %>% 
   summarize(average = round(mean(num_unique_volunteers), 0))
 
-#2016 - 2021 Average: 1048
+#2016-2020 Average: 1048
 five_year_avg_volunteers_per_year <- df_year %>% filter(year >= 2016 & year < 2021) %>%
   summarize(average = round(mean(num_unique_volunteers), 0))
 
-
+#BY SEMESTER & YEAR
+#----------------------------------------------
 #Group by semester and year
-df_sem_year <- df %>% select(c(name, semester, year)) %>% distinct() %>% 
+df_sem_year <- df_unique_vols %>% select(c(name, semester, year)) %>% distinct() %>% 
                    count (year, semester) %>% rename(num_unique_volunteers = n)
 
-#2006 - 2021 Average: 218
+#2006-2021 Average: 218
 all_avg_volunteers_per_sem <- df_sem_year %>% filter(year < 2021) %>% 
                                                   summarize(average = round(mean(num_unique_volunteers), 0))
 
-#2016 - 2021 Average: 262
+#2016-2021 Average: 262
 five_year_avg_volunteers_per_sem_ALL <- df_sem_year %>% filter(year >= 2016 & year < 2021) %>%
                                                    summarize(average = round(mean(num_unique_volunteers), 0))
-#FALL 2016 - 2021 AVERAGE: 271
+#FALL 2016-2021 AVERAGE: 271
 five_year_avg_volunteers_per_sem_fall <- df_sem_year %>% filter(year >= 2016 & 
                                                                 year < 2021 & 
                                                                 semester == "FALL") %>%
                                                          summarize(average = round(mean(num_unique_volunteers), 0))
-#WINTER 2016 - 2021: 325
+#WINTER 2017-2021: 325
 five_year_avg_volunteers_per_sem_winter <- df_sem_year %>% filter(year >= 2016 & 
-                                                                  year < 2021 & 
                                                                   semester == "WINTER") %>%
                                                            summarize(average = round(mean(num_unique_volunteers), 0))
-#SPRING 2016 - 2021: 300
-five_year_avg_volunteers_per_sem_spring <- df_sem_year %>% filter(year >= 2016 & 
-                                                                  year < 2021 & 
+#SPRING 2017-2021: 300
+five_year_avg_volunteers_per_sem_spring <- df_sem_year %>% filter(year >= 2017 &
                                                                   semester == "SPRING") %>%
                                                            summarize(average = round(mean(num_unique_volunteers), 0))
-#SUMMER 2016 - 2021: 152
+#SUMMER 2016-2020: 152
 five_year_avg_volunteers_per_sem_summer <- df_sem_year %>% filter(year >= 2016 & 
                                                                   year < 2021 & 
                                                                   semester == "SUMMER") %>%
                                                            summarize(average = round(mean(num_unique_volunteers), 0))
-
 
 
 #Setting colors for each semester
@@ -105,8 +111,13 @@ A <- ggplot(data=df_sem_year, aes(x=year, y=num_unique_volunteers, fill=semester
                 axis.title.y = element_text(margin = unit(c(0,5,0,0),"mm")))
         
 
-
-
-
 df_avg_semester <- df_indiv %>% group_by(semester) %>% 
                                 summarize(average = round(mean(num_unique_volunteers), 0))
+
+
+
+
+
+#--------------------------------------------#
+#---------- UNIQUE VOLUNTEER ROLES ----------#
+#--------------------------------------------#
