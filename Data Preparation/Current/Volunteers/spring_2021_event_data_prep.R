@@ -163,17 +163,22 @@ counts_by_zip_code <- df_stats %>% group_by(zip_code) %>%
 # Get all volunteer data for 2010 to Present
 #---------------------------------------------
 #First dataframe, 2010 to Fall 2020
-df_v_1 <- read.csv("All Volunteers (Teachers, Tutors, Librarians, Special) from 2006 to Fall 2020_1212.csv",
+df_v_1 <- read.csv("./WEC/Data/Historical (2006 - 2019)/Volunteers/Output/All Volunteers (Teachers, Tutors, Librarians, Special) from 2006 to Fall 2020_1212 - All Volunteers (Teachers, Tutors, Librarians, Special) from 2006 to Fall 2020_1212.csv",
                    stringsAsFactors = FALSE)
+
+names(df_v_1) <- c("category", "day", "name", "email", "phone", "new_volunteer", "semester", "year",
+                   "tutor_type", "class")
+
+a <- df_v_2 %>% filter(year == 2020)
 
 # Volunteer data, Winter 2021
 #---------------------------------------------
-df_v_2 <- read.csv("All WEC Volunteers Winter 2021.csv", stringsAsFactors = FALSE)
+df_v_2 <- read.csv("./WEC/Data/Current (2020 - Present)/Volunteers/Winter 2021 Volunteers/Output/All WEC Volunteers Winter 2021.csv", stringsAsFactors = FALSE)
 
 
 # Volunteer data, Spring 2021
 #---------------------------------------------
-df_am <- read_excel("spring_2021_volunteers.xlsx", sheet = "AM") %>% select(1:8)
+df_am <- read_excel("./WEC/Data/Covid (March 2020 - May 2021)/Volunteer/spring_2021_volunteers.xlsx", sheet = "AM") %>% select(1:8)
 names(df_am) <- c("class", "time", "day", "name", "email", "phone", "nickname", "new_volunteer")
 
 df_am <- df_am %>% mutate(class = str_replace(class, "ADDED.*|UPDATED", NA_character_),
@@ -186,7 +191,7 @@ df_am <- df_am %>% mutate(class = str_replace(class, "ADDED.*|UPDATED", NA_chara
                           new_volunteer = case_when(str_detect(new_volunteer, "yes|Yes|YES") ~ "No",
                                                     str_detect(new_volunteer, "no|No|NO") ~ "Yes"))
                    
-df_pm <- read_excel("spring_2021_volunteers.xlsx", sheet = "PM") %>% select(1:8)
+df_pm <- read_excel("./WEC/Data/Covid (March 2020 - May 2021)/Volunteer/spring_2021_volunteers.xlsx", sheet = "PM") %>% select(1:8)
 names(df_pm) <- c("class", "time", "day", "name", "email", "phone", "new_volunteer", "nickname")
 
 df_pm <- df_pm %>% mutate(class = str_replace(class, "ADDED.*|Added.*|UPDATED.*", NA_character_),
@@ -199,7 +204,7 @@ df_pm <- df_pm %>% mutate(class = str_replace(class, "ADDED.*|Added.*|UPDATED.*"
                           new_volunteer = case_when(str_detect(new_volunteer, "yes|Yes|YES") ~ "No",
                                                     str_detect(new_volunteer, "no|No|NO") ~ "Yes"))
 
-df_tutors <- read_excel("spring_2021_volunteers.xlsx", sheet = "Tutors") %>% select(1:5) 
+df_tutors <- read_excel("./WEC/Data/Covid (March 2020 - May 2021)/Volunteer/spring_2021_volunteers.xlsx", sheet = "Tutors") %>% select(1:5) 
 names(df_tutors) <- c("name",  "day", "time", "email", "new_volunteer")
 
 df_tutors <- df_tutors %>% mutate(semester = "SPRING", year = 2021, category = "Tutor",
@@ -209,7 +214,7 @@ df_tutors <- df_tutors %>% mutate(semester = "SPRING", year = 2021, category = "
                                   name = str_to_upper(name))
 
 
-df_clubs <- read_excel("spring_2021_volunteers.xlsx", sheet = "Clubs") %>% 
+df_clubs <- read_excel("./WEC/Data/Covid (March 2020 - May 2021)/Volunteer/spring_2021_volunteers.xlsx", sheet = "Clubs") %>% 
                 select(c( "Name", "Time", "Day", "Email", "Returning Volunteer?", "Club Name"))
 names(df_clubs) <- c("name", "time", "day", "email", "new_volunteer", "club_name")
 
@@ -225,6 +230,10 @@ df_v_3 <- as_tibble(bind_rows(df_am, df_pm, df_tutors, df_clubs))
 
 #Bringing it all together
 df_v <- bind_rows(df_v_1, df_v_2, df_v_3)
+
+#Saving all volunteer data for other tasks
+write.csv(df_v, "/Users/Daniel/Desktop/WEC/Data/All (2006 - Present)/all_volunteers_2006_2021.csv", row.names = FALSE)
+
 
 
 #Identify (filter) volunteers who had volunteered between
@@ -242,17 +251,6 @@ df_pan <- df_v %>% filter(year == 2021 | (year == 2020 & semester %in% c("SPRING
 # during the pandemic: 183
 faithful_vols <- inner_join(df_pre, df_pan, by = c("name"))
 
-
-df_pre <- df_v %>% filter(year < 2020 & year | (year == 2020 & semester == "WINTER")) %>% 
-  distinct(name)
-
-df_pan <- df_v %>% filter(year == 2021 | (year == 2020 & semester %in% c("SPRING", "SUMMER", "FALL"))) %>%
-  distinct(name)
-
-
-#Anyone who had previously volunteered with WEC in person and volunteered virtually
-# during the pandemic: 183
-faithful_vols <- inner_join(df_pre, df_pan, by = c("name"))
 
 #-------------------------------------------------------------------------------------------------------
 #------------------------------------
