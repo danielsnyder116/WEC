@@ -1,24 +1,6 @@
-#-------------------------------
-# ACADEMIC REPORTING: VOLUNTEERS
-#-------------------------------
-
-#-------------------------------
-# Recruit enough volunteers to fulfill all our virtual programming.
-# How many unique vols were active each term? How many vol roles were active each term (some vols may have more than one role, i.e. co-teach two days)
-# Establish a baseline number of volunteers needed per virtual term.
-
-# Increase year-over-year retention rate to 50%
-# Note: Pandemic is wildcard - this might not be reasonable  
-# Establish a baseline for the average # of terms volunteers serve within one FY
-
-# What is percent of non-native English speaking teachers? What is percent of native English Speaking teachers
-# Racial/ethnic diversity - increase % of non-white teachers from Spring 2020 baseline
-# What is percentage breakdown by race (fed gov’t categories) and by ethnicity (hispanic/latino vs. non-hispanic/non-latino)?
-#   
-
-#-------------------------------
-
-#Bring in all volunteer data 
+#-------------------------------------------
+# ACADEMIC REPORTING: VOLUNTEER RECRUITMENT
+#-------------------------------------------
 
 library(dplyr)
 library(stringr)
