@@ -2,9 +2,14 @@
 # ACADEMIC REPORTING: VOLUNTEER RECRUITMENT
 #-------------------------------------------
 
+#M 9:40 - 5:40 = 8 hours
+#Tu 10:00 - 3:00 = 5
+#W  5:30 - 
+
+
+
 # Increase year-over-year retention rate to 50%
 # Note: Pandemic is wildcard - this might not be reasonable  
-# Establish a baseline for the average # of terms volunteers serve within one FY
 
 library(dplyr)
 library(stringr)
@@ -379,20 +384,22 @@ get_retention_rates <- function(dataframe) {
     #Get volunteers that went into next FY
     df_multi_year_vols <- df_vols$name[df_vols$name %in% df_vols_next$name]
     
-    retention_stat <- paste0(round(length(df_multi_year_vols) / nrow(df_vols) * 100, 0), "%")
+    retention_stat <- round((length(df_multi_year_vols) / nrow(df_vols)) * 100, 0)
     
     if (i == 2007) {
       
-      df_base <- tibble(year_range = glue::glue("{i}-{i+1}"), 
-                                 year_one_num_vols = nrow(df_vols),
-                                 year_one_num_vols_in_year_two = length(df_multi_year_vols),
-                                 retention_rate = retention_stat)
+      df_base <- tibble(year = i,
+                        year_range = glue::glue("{i}-{i+1}"), 
+                        year_one_num_vols = nrow(df_vols),
+                        year_one_num_vols_in_year_two = length(df_multi_year_vols),
+                        retention_rate = retention_stat)
       
     }
     
     else {
       
-      df_retention_row <- tibble(year_range = glue::glue("{i}-{i+1}"), 
+      df_retention_row <- tibble(year = i,
+                                 year_range = glue::glue("{i}-{i+1}"), 
                                  year_one_num_vols = nrow(df_vols),
                                  year_one_num_vols_in_year_two = length(df_multi_year_vols),
                                  retention_rate = retention_stat)
@@ -405,17 +412,78 @@ get_retention_rates <- function(dataframe) {
 
 df_fy_retention <- get_retention_rates(df)
 
+df_five_year_rate_row <- df_fy_retention %>% filter(year >= 2017) %>% summarize(across(3:5, mean)) %>% 
+              add_column(year = NA, .before = "year_one_num_vols") %>%
+              add_column(year_range = "2017-2021 Average Retention:", .before = "year_one_num_vols") %>%
+              mutate(across(3:5, ~round(., 0))) %>%
+              mutate(retention_rate = paste0(retention_rate, "%"))
+
+df_overall_rate_row <- df_fy_retention %>% summarize(across(3:5, mean)) %>%
+              add_column(year = NA, .before = "year_one_num_vols") %>%
+              add_column(year_range = "2007-2021 Average Retention:", .before = "year_one_num_vols") %>%
+              mutate(across(3:5, ~round(., 0))) %>%
+              mutate(retention_rate = paste0(retention_rate, "%"))
+
+df_fy_retention <- df_fy_retention %>% mutate(retention_rate = paste0(retention_rate, "%"))
+
+df_fy_retention <- bind_rows(df_fy_retention, df_five_year_rate_row, df_overall_rate_row) %>% select(-c(year))
 
 
+# Establish a baseline for the average # of terms volunteers serve within one FY
+get_avg_terms_per_fy <- function(dataframe){
+
+  for (i in c(2007:2020)) {
+    #i = 2007
+    
+    for (j in c("WINTER", "SPRING", "SUMMER", "FALL")) {
+      
+      #j = "WINTER"
+      
+      df_sem <- dataframe %>% filter(year == i & semester == j) %>% distinct(year, semester, name)
+      
+      if ((i == 2007 & j == "WINTER")){
+        
+        df_final <- df_sem
+      }
+      else {
+        
+        df_final <- bind_rows(df_final, df_sem)
+        
+      }
+      
+      
+    }
+    
+  }
+  
+  #Aggregate up to the year level in terms of frequency 
+  df_final <- df_final %>% group_by(year, name) %>% summarize(n = n())
+      
+return(df_final) 
+}   
+    
+    
+df_avg_granular <- get_avg_terms_per_fy(df)
+    
+
+#So, OF the individuals who volunteered during a year, this is the average
+
+#For each year, the average number of terms
+df_avg_fy <- df_avg_granular %>% group_by(year) %>% summarize(avg_term = round(mean(n), 1), 
+                                                              median_term = median(n),
+                                                              max_term = max(n))
 
 
+B <- ggplot(data=df_avg_granular, aes(x=n)) + 
+        geom_histogram(aes(y = ..density..), bins = 4, color='black', fill='lightblue') +
+        facet_grid(.~year) + #semester~year to get every case
+        scale_y_continuous(breaks = seq(.1, .9, by=.1), 
+                           labels = scales::percent_format(accuracy = 1L),
+                           expand = c(0,0)) +
 
+        labs(title="Number of Terms per FY Distribution ", x="Number of Terms", y="Percentage of Volunteers") +
+        theme(axis.title.y = element_text(margin = unit(c(0,4,0,0), "mm")),
+              axis.ticks.x=element_blank(),
+              panel.spacing = unit(1, "lines"))
 
-
-
-
-
-
-
-
-
+B
