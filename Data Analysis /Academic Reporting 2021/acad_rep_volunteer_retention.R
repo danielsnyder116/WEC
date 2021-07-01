@@ -17,6 +17,11 @@ library(openxlsx)
 library(tidyr)
 library(tibble)
 library(glue)
+library(ggplot2)
+
+library(viridis)
+
+
 
 
 setwd("/Users/Daniel/Desktop/WEC/Data/All (2006 - Present)")
@@ -28,6 +33,7 @@ df <- read.csv("all_volunteers_2006_2021_final.csv", stringsAsFactors = FALSE) %
 length(unique(df$name))
 
 #Manual correcting of name variation for same individual argh
+#-------------------
 df <- df %>% mutate(name = case_when(str_detect(name, "PIOCH") ~ "ABIGAIL (ABBY) PIOCH",
                                      str_detect(name, "ABBY THOMSEN") ~ "ABBY THOMSEN VARGAS",
                                      str_detect(name, "ALBERT WAT") ~ "ALBERT WATT",
@@ -361,11 +367,9 @@ df <- df %>% mutate(name = case_when(str_detect(name, "PIOCH") ~ "ABIGAIL (ABBY)
                                      str_detect(name, "ZACH LUCK ET AL") ~ "ZACH LUCK",
                                      str_detect(name, "ZENAN \\\"VERA\\\" SONG") ~ "ZENAN (VERA) SONG",
                                      str_detect(name, "ZERSHA MUNIR|ZERSHA MURNIR") ~ "ZERSHA MUNIR/MURNIR?",
-                              
-
                                      TRUE ~ name)
                     )
-
+#----------------------
 
 #4592/4943 (improved by 7%)
 unique_volunteers <- df %>% distinct(name)
@@ -375,13 +379,14 @@ nrow(unique_volunteers)
 #For each year
 #get all unique volunteers
 get_retention_rates <- function(dataframe) {
+  
   for (i in c(2007:2020)) {
     #i = 2007
     
     df_vols <- dataframe %>% filter(year == i) %>% distinct(name) 
     df_vols_next <- dataframe %>% filter(year == i+1) %>% distinct(name) 
     
-    #Get volunteers that went into next FY
+    #Get volunteers that went into next cy
     df_multi_year_vols <- df_vols$name[df_vols$name %in% df_vols_next$name]
     
     retention_stat <- round((length(df_multi_year_vols) / nrow(df_vols)) * 100, 0)
@@ -393,7 +398,6 @@ get_retention_rates <- function(dataframe) {
                         year_one_num_vols = nrow(df_vols),
                         year_one_num_vols_in_year_two = length(df_multi_year_vols),
                         retention_rate = retention_stat)
-      
     }
     
     else {
@@ -410,33 +414,35 @@ get_retention_rates <- function(dataframe) {
   return(df_base)
 }
 
-df_fy_retention <- get_retention_rates(df)
+df_cy_retention <- get_retention_rates(df)
 
-df_five_year_rate_row <- df_fy_retention %>% filter(year >= 2017) %>% summarize(across(3:5, mean)) %>% 
+df_five_year_rate_row <- df_cy_retention %>% filter(year >= 2017) %>% summarize(across(3:5, mean)) %>% 
               add_column(year = NA, .before = "year_one_num_vols") %>%
               add_column(year_range = "2017-2021 Average Retention:", .before = "year_one_num_vols") %>%
               mutate(across(3:5, ~round(., 0))) %>%
               mutate(retention_rate = paste0(retention_rate, "%"))
 
-df_overall_rate_row <- df_fy_retention %>% summarize(across(3:5, mean)) %>%
+df_overall_rate_row <- df_cy_retention %>% summarize(across(3:5, mean)) %>%
               add_column(year = NA, .before = "year_one_num_vols") %>%
               add_column(year_range = "2007-2021 Average Retention:", .before = "year_one_num_vols") %>%
               mutate(across(3:5, ~round(., 0))) %>%
               mutate(retention_rate = paste0(retention_rate, "%"))
 
-df_fy_retention <- df_fy_retention %>% mutate(retention_rate = paste0(retention_rate, "%"))
+df_cy_retention <- df_cy_retention %>% mutate(retention_rate = paste0(retention_rate, "%"))
 
-df_fy_retention <- bind_rows(df_fy_retention, df_five_year_rate_row, df_overall_rate_row) %>% select(-c(year))
+#---------------------------------------
+#         DELIVERABLE DATA SET #1
+#---------------------------------------
+df_cy_retention <- bind_rows(df_cy_retention, df_five_year_rate_row, df_overall_rate_row) %>% select(-c(year))
 
 
-# Establish a baseline for the average # of terms volunteers serve within one FY
-get_avg_terms_per_fy <- function(dataframe){
+# Establish a baseline for the average # of terms volunteers serve within one cy
+get_avg_terms_per_cy <- function(dataframe){
 
   for (i in c(2007:2020)) {
     #i = 2007
     
     for (j in c("WINTER", "SPRING", "SUMMER", "FALL")) {
-      
       #j = "WINTER"
       
       df_sem <- dataframe %>% filter(year == i & semester == j) %>% distinct(year, semester, name)
@@ -448,42 +454,95 @@ get_avg_terms_per_fy <- function(dataframe){
       else {
         
         df_final <- bind_rows(df_final, df_sem)
-        
       }
-      
-      
     }
-    
   }
   
   #Aggregate up to the year level in terms of frequency 
   df_final <- df_final %>% group_by(year, name) %>% summarize(n = n())
-      
-return(df_final) 
+  return(df_final) 
 }   
     
-    
-df_avg_granular <- get_avg_terms_per_fy(df)
+df_avg_granular <- get_avg_terms_per_cy(df) 
     
 
 #So, OF the individuals who volunteered during a year, this is the average
 
 #For each year, the average number of terms
-df_avg_fy <- df_avg_granular %>% group_by(year) %>% summarize(avg_term = round(mean(n), 1), 
+#---------------------------------------
+#       DELIVERABLE DATA SET #2
+#---------------------------------------
+df_avg_cy <- df_avg_granular %>% group_by(year) %>% summarize(avg_term = round(mean(n), 1), 
                                                               median_term = median(n),
-                                                              max_term = max(n))
+                                                              max_term = max(n)) %>%
+                                 rename(Year = year, 
+                                        `Average Number of Terms Served by Volunteers` = avg_term,
+                                        `Median Number of Terms Served by Volunteers` = median_term,
+                                        `Max Number of Terms Served by Volunteers` = max_term)
 
+#HISTOGRAM OVER TIME - AREA CHART IS MORE EFFECTIVE
+#-------------------------------------------------
+# B <- ggplot(data=df_avg_granular, aes(x=n)) + 
+#         geom_histogram(aes(y = ..density..), bins = 4, color='black', fill='lightblue') +
+#         facet_grid(.~year) + #semester~year to get every case
+#         scale_y_continuous(breaks = seq(.1, .9, by=.1), 
+#                            labels = scales::percent_format(accuracy = 1L),
+#                            expand = c(0,0)) +
+# 
+#         labs(title="Distribution of the Number of Terms Volunteers Serve per cy", x="Number of Terms Served", y="Percentage of Volunteers Who Served During one cy") +
+#         theme(axis.title.y = element_text(margin = unit(c(0,4,0,0), "mm")),
+#               axis.ticks.x=element_blank(),
+#               panel.spacing = unit(.6, "lines"))
+# 
+# B
+#-------------------------------------------------
 
-B <- ggplot(data=df_avg_granular, aes(x=n)) + 
-        geom_histogram(aes(y = ..density..), bins = 4, color='black', fill='lightblue') +
-        facet_grid(.~year) + #semester~year to get every case
-        scale_y_continuous(breaks = seq(.1, .9, by=.1), 
+#AREA CHART OVER TIME
+#--------------------------------------------------
+df_area_1 <- df_avg_granular %>% rename(num_terms = n) %>% group_by(year, num_terms) %>% summarize(num_volunteers = n())
+                              
+df_area_2 <- df_area_1 %>% group_by(year) %>% summarize(total_volunteers = sum(num_volunteers))
+
+df_area <- left_join(df_area_1, df_area_2, by=c("year")) %>% mutate(percent_vols = (num_volunteers / total_volunteers))
+
+df_area_graph <- df_area %>% mutate(num_terms = factor(as.character(num_terms), levels = c("4", "3", "2", "1"))
+                                    )
+
+#---------------------------------------
+#       DELIVERABLE DATA SET #3
+#---------------------------------------
+df_area_print <- df_area %>% mutate(percent_vols = paste0(round(percent_vols, 3) * 100, "%")) %>%
+                             rename(Year = year,
+                                    `Number of Terms Served in one CY` = num_terms,
+                                    `Number of Volunteers Who Served This Number of Terms` = num_volunteers,
+                                    `Total Number of Volunteers in CY` = total_volunteers, 
+                                    `Percent of All Volunteers Who Served at Least Once During CY` = percent_vols)
+
+#GRAPH CODE
+C <- ggplot(data=df_area_graph, aes(x=year, y=percent_vols, fill=num_terms)) + 
+       geom_area(alpha=.65) +
+        scale_y_continuous(breaks = seq(.1, 1, by=.1),
                            labels = scales::percent_format(accuracy = 1L),
                            expand = c(0,0)) +
+  
+       scale_x_continuous(breaks = seq(2007, 2020, by=2)) +
+       scale_fill_viridis(discrete = TRUE) +
 
-        labs(title="Number of Terms per FY Distribution ", x="Number of Terms", y="Percentage of Volunteers") +
+        labs(title="Distribution of the Number of Terms Volunteers Serve per CY", 
+             x="Calendar Year", 
+             y="% Volunteers Who Served During One CY",
+             fill="Number of Terms") +
         theme(axis.title.y = element_text(margin = unit(c(0,4,0,0), "mm")),
               axis.ticks.x=element_blank(),
-              panel.spacing = unit(1, "lines"))
+              panel.spacing = unit(.6, "lines"))
+  
+C
 
-B
+list_of_tables <- list("Retention" = df_cy_retention,
+                       "Average # Terms" = df_avg_cy,
+                       "Distribution by # Terms" = df_area_print)
+write.xlsx(list_of_tables, file = "./Output/WEC Volunteer Retention & Average Service: 2007-2021.xlsx", row.names = FALSE)
+
+
+
+
