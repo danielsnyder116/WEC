@@ -4,7 +4,8 @@
 
 #M 9:40 - 5:40 = 8 hours
 #Tu 10:00 - 3:00 = 5
-#W  5:30 - 
+#W  5:30 - 7:30 = 2
+#   7:45 -
 
 
 
@@ -26,9 +27,26 @@ library(viridis)
 
 setwd("/Users/Daniel/Desktop/WEC/Data/All (2006 - Present)")
 
+
 df <- read.csv("all_volunteers_2006_2021_final.csv", stringsAsFactors = FALSE) %>% 
-                mutate(semester=factor(semester, levels = c("WINTER", "SPRING", "SUMMER", "FALL"))) %>%
+                mutate(semester=factor(semester, levels = c("SUMMER", "FALL", "WINTER", "SPRING")),
+                       year = as.double(year)) %>%
+                filter(year != 2006) %>% 
+                arrange(across(c(year, semester))) %>% 
+  
+                #To create FY and get rid of two semester from partial FY 2006
+                mutate(fy = case_when((semester %in% c("WINTER", "SPRING")) ~ (year - 1), TRUE ~ year)) %>%
+                select(-year) %>%
+                rename(year = fy) %>%
                 filter(year != 2006)
+
+               
+
+#Recode Year so we are working with FY and not CY
+# df <- df %>% mutate(fy = case_when((semester %in% c("WINTER", "SPRING")) ~ (year - 1),
+#                                    TRUE ~ year)
+#                     ) %>% distinct(year, semester, fy)
+verify <- df %>% distinct(semester, year)
 
 length(unique(df$name))
 
@@ -367,11 +385,12 @@ df <- df %>% mutate(name = case_when(str_detect(name, "PIOCH") ~ "ABIGAIL (ABBY)
                                      str_detect(name, "ZACH LUCK ET AL") ~ "ZACH LUCK",
                                      str_detect(name, "ZENAN \\\"VERA\\\" SONG") ~ "ZENAN (VERA) SONG",
                                      str_detect(name, "ZERSHA MUNIR|ZERSHA MURNIR") ~ "ZERSHA MUNIR/MURNIR?",
+                                     str_detect(email, "court\\.schett@gmail\\.com") ~ "COURT SCHETT",
                                      TRUE ~ name)
                     )
 #----------------------
-
-#4592/4943 (improved by 7%)
+#CY: 4592/4943 (improved by 7%)
+#FY: 4446/4790 (improved by 7%)
 unique_volunteers <- df %>% distinct(name)
 nrow(unique_volunteers)
 
@@ -380,7 +399,7 @@ nrow(unique_volunteers)
 #get all unique volunteers
 get_retention_rates <- function(dataframe) {
   
-  for (i in c(2007:2020)) {
+  for (i in c(2007:2019)) {
     #i = 2007
     
     df_vols <- dataframe %>% filter(year == i) %>% distinct(name) 
@@ -414,30 +433,33 @@ get_retention_rates <- function(dataframe) {
   return(df_base)
 }
 
-df_cy_retention <- get_retention_rates(df)
+df_fy_retention <- get_retention_rates(df)
 
-df_five_year_rate_row <- df_cy_retention %>% filter(year >= 2017) %>% summarize(across(3:5, mean)) %>% 
+df_five_year_rate_row <- df_fy_retention %>% filter(year >= 2017) %>% summarize(across(3:5, mean)) %>% 
               add_column(year = NA, .before = "year_one_num_vols") %>%
-              add_column(year_range = "2017-2021 Average Retention:", .before = "year_one_num_vols") %>%
+              add_column(year_range = "2017-2020 Average Retention:", .before = "year_one_num_vols") %>%
               mutate(across(3:5, ~round(., 0))) %>%
               mutate(retention_rate = paste0(retention_rate, "%"))
 
-df_overall_rate_row <- df_cy_retention %>% summarize(across(3:5, mean)) %>%
+df_overall_rate_row <- df_fy_retention %>% summarize(across(3:5, mean)) %>%
               add_column(year = NA, .before = "year_one_num_vols") %>%
-              add_column(year_range = "2007-2021 Average Retention:", .before = "year_one_num_vols") %>%
+              add_column(year_range = "2007-2020 Average Retention:", .before = "year_one_num_vols") %>%
               mutate(across(3:5, ~round(., 0))) %>%
               mutate(retention_rate = paste0(retention_rate, "%"))
 
-df_cy_retention <- df_cy_retention %>% mutate(retention_rate = paste0(retention_rate, "%"))
+df_fy_retention <- df_fy_retention %>% mutate(retention_rate = paste0(retention_rate, "%"))
 
 #---------------------------------------
 #         DELIVERABLE DATA SET #1
 #---------------------------------------
-df_cy_retention <- bind_rows(df_cy_retention, df_five_year_rate_row, df_overall_rate_row) %>% select(-c(year))
+df_fy_retention <- bind_rows(df_fy_retention, df_five_year_rate_row, df_overall_rate_row) %>% select(-c(year)) %>%
+                            rename(`Year Range` = year_range,
+                                   
+                                   )
 
 
 # Establish a baseline for the average # of terms volunteers serve within one cy
-get_avg_terms_per_cy <- function(dataframe){
+get_avg_terms_per_fy <- function(dataframe){
 
   for (i in c(2007:2020)) {
     #i = 2007
@@ -463,22 +485,33 @@ get_avg_terms_per_cy <- function(dataframe){
   return(df_final) 
 }   
     
-df_avg_granular <- get_avg_terms_per_cy(df) 
+df_avg_granular <- get_avg_terms_per_fy(df) 
     
 
 #So, OF the individuals who volunteered during a year, this is the average
 
 #For each year, the average number of terms
+df_avg_fy <- df_avg_granular %>% group_by(year) %>% summarize(avg_term = round(mean(n), 1), 
+                                                              median_term = median(n),
+                                                              max_term = max(n)) %>%
+                                                     mutate(year = as.character(year))
+
+
+df_avg_all <- df_avg_fy %>% summarize(avg_term = round(mean(avg_term), 1)) %>% 
+                    add_column(year = "2007-2020 Average Number of Terms") %>%
+                    add_column(median_term = NA) %>%
+                    add_column(max_term = NA)
+
+
 #---------------------------------------
 #       DELIVERABLE DATA SET #2
 #---------------------------------------
-df_avg_cy <- df_avg_granular %>% group_by(year) %>% summarize(avg_term = round(mean(n), 1), 
-                                                              median_term = median(n),
-                                                              max_term = max(n)) %>%
-                                 rename(Year = year, 
-                                        `Average Number of Terms Served by Volunteers` = avg_term,
-                                        `Median Number of Terms Served by Volunteers` = median_term,
-                                        `Max Number of Terms Served by Volunteers` = max_term)
+df_avg_fy <- bind_rows(df_avg_fy, df_avg_all) %>%
+               rename(`Fiscal Year`= year, 
+                      `Average Number of Terms Served by Volunteers` = avg_term,
+                      `Median Number of Terms Served by Volunteers` = median_term,
+                      `Max Number of Terms Served by Volunteers` = max_term)
+
 
 #HISTOGRAM OVER TIME - AREA CHART IS MORE EFFECTIVE
 #-------------------------------------------------
@@ -499,7 +532,9 @@ df_avg_cy <- df_avg_granular %>% group_by(year) %>% summarize(avg_term = round(m
 
 #AREA CHART OVER TIME
 #--------------------------------------------------
-df_area_1 <- df_avg_granular %>% rename(num_terms = n) %>% group_by(year, num_terms) %>% summarize(num_volunteers = n())
+df_area_1 <- df_avg_granular %>% mutate(num_terms = factor(as.character(n), 
+                                                       levels = c("1","2", "3", "4"))) %>% 
+                                 group_by(year, num_terms, .drop = FALSE) %>% summarize(num_volunteers = n())
                               
 df_area_2 <- df_area_1 %>% group_by(year) %>% summarize(total_volunteers = sum(num_volunteers))
 
@@ -512,11 +547,11 @@ df_area_graph <- df_area %>% mutate(num_terms = factor(as.character(num_terms), 
 #       DELIVERABLE DATA SET #3
 #---------------------------------------
 df_area_print <- df_area %>% mutate(percent_vols = paste0(round(percent_vols, 3) * 100, "%")) %>%
-                             rename(Year = year,
-                                    `Number of Terms Served in one CY` = num_terms,
+                             rename(`FY`= year,
+                                    `Number of Terms Served in one FY` = num_terms,
                                     `Number of Volunteers Who Served This Number of Terms` = num_volunteers,
-                                    `Total Number of Volunteers in CY` = total_volunteers, 
-                                    `Percent of All Volunteers Who Served at Least Once During CY` = percent_vols)
+                                    `Total Number of Volunteers in FY` = total_volunteers, 
+                                    `Percent of All Volunteers Who Served at Least Once During FY` = percent_vols)
 
 #GRAPH CODE
 C <- ggplot(data=df_area_graph, aes(x=year, y=percent_vols, fill=num_terms)) + 
@@ -525,23 +560,26 @@ C <- ggplot(data=df_area_graph, aes(x=year, y=percent_vols, fill=num_terms)) +
                            labels = scales::percent_format(accuracy = 1L),
                            expand = c(0,0)) +
   
-       scale_x_continuous(breaks = seq(2007, 2020, by=2)) +
+       scale_x_continuous(breaks = c(seq(2007, 2020, by=2), 2020)) +
        scale_fill_viridis(discrete = TRUE) +
 
-        labs(title="Distribution of the Number of Terms Volunteers Serve per CY", 
-             x="Calendar Year", 
-             y="% Volunteers Who Served During One CY",
+        labs(title="Distribution of the Number of Terms Volunteers Serve per FY", 
+             x="Fiscal Year", 
+             y="% Volunteers Who Served During One FY",
              fill="Number of Terms") +
         theme(axis.title.y = element_text(margin = unit(c(0,4,0,0), "mm")),
-              axis.ticks.x=element_blank(),
+              axis.ticks.x= element_blank(),
+              axis.text.x = element_text(vjust = .75, size = 10, angle = 30),
               panel.spacing = unit(.6, "lines"))
+
+
   
 C
 
-list_of_tables <- list("Retention" = df_cy_retention,
-                       "Average # Terms" = df_avg_cy,
+list_of_tables <- list("Retention" = df_fy_retention,
+                       "Average # Terms" = df_avg_fy,
                        "Distribution by # Terms" = df_area_print)
-write.xlsx(list_of_tables, file = "./Output/WEC Volunteer Retention & Average Service: 2007-2021.xlsx", row.names = FALSE)
+write.xlsx(list_of_tables, file = "./Output/WEC Volunteer Retention & Average Service: FY2007-FY2020.xlsx", row.names = FALSE)
 
 
 
