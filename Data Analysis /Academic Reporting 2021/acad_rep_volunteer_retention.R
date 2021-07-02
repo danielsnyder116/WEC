@@ -2,10 +2,10 @@
 # ACADEMIC REPORTING: VOLUNTEER RECRUITMENT
 #-------------------------------------------
 
-#M 9:40 - 5:40 = 8 hours
+#M 9:40 - 5:40 = 8 hours minus 4 last week
 #Tu 10:00 - 3:00 = 5
 #W  5:30 - 7:30 = 2
-#   7:45 -
+#   7:45 - 10:45 = 3  myaccess.adp.com
 
 
 
