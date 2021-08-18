@@ -33,6 +33,16 @@ df <- read.csv("all_volunteers_2006_2021_final.csv", stringsAsFactors = FALSE) %
                 filter(year != 2006)
                 
 
+#GENERATING TOTAL NUMBER OF HOURS BY GROUP
+df_21 <- df %>% filter(year == 2020) %>% group_by(category, semester) %>% summarize(num_roles = n()) %>%
+                mutate(num_weeks = case_when(semester %in% c("WINTER", "SPRING") ~ 10, 
+                                             semester == "SUMMER" ~ 6, 
+                                             semester == "FALL" ~ 9)
+                ) %>% mutate(num_hours = case_when(category %in% c("Tutor", "Club") ~ 1.5,
+                                                   category == "Teacher" ~ 3)) %>%
+                mutate(total_hours = (num_roles * num_weeks * num_hours))
+
+
 
 
 #---------------------------------------#
