@@ -5,18 +5,20 @@
 #!pip install pydrive
 
 #https://medium.com/analytics-vidhya/how-to-connect-google-drive-to-python-using-pydrive-9681b2a14f20
-
+#https://github.com/googlearchive/PyDrive
 
 import os
 import pandas as pd
 from pathlib import Path
 
-cwd = Path.home() / "Desktop/volunteer/WEC/Data Extraction & Transformation/Google Sheets"
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
+cwd = Path.home() / "Desktop/WEC/Code"
 
 os.chdir(cwd)
 
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+#list(cwd.glob("*"))
 
 #Authenticates google connection
 g_auth = GoogleAuth()
@@ -30,14 +32,26 @@ drive = GoogleDrive(g_auth)
 #See all files (excluding trashed) on drive
 #Other queries: "title contains '^Copy' and trashed=false"
 #q is query
-files = drive.ListFile({'q':"trashed=false"}).GetList()
+#'root'for all in My Drive
+#wec_drive_id = '1qGEHvhuxZKhRXq6CntpSkDXgOx6mhgcl'
+
+files = drive.ListFile({'q':"'0AO0qQjqQb1rKUk9PVA' in parents and trashed=false",
+                        'corpora':'teamDrive', 
+                        'teamDriveId':'0AO0qQjqQb1rKUk9PVA',
+                        'includeTeamDriveItems':'True',
+                        'supportsAllDrives':'True'}).GetList()
+
+
+
 
 #List comprehension to get title attribute for all files
 file_names = [i['title'] for i in files]
 
 
+#How to actually read in a file
 
-
+downloaded_file = drive.CreateFile({'id':'1aZVn_-lvnz4v0agQNfK7M3VzwuQyq8wtG8um46gwjx8'})
+downloaded_file.GetContentFile('test.csv')
 
 
 

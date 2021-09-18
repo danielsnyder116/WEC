@@ -3,6 +3,6 @@ library(googledrive)
 
 library(googlesheets4)
 
-#Using Google Drive to retrieve file ID
+#Using Google Drive to retrieve file ID on our behalf
 df <- read_sheet("https://docs.google.com/spreadsheets/d/1RTeriVksD6lCdLQGAwNq5vvU6xFQuTnbRJ5YicAR7Lc/edit#gid=21883840")
 
